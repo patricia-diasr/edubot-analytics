@@ -19,12 +19,20 @@ Este repositório reúne a primeira entrega do projeto (TP1), com foco na escolh
 ```
 ├── api/        # API FastAPI (Infra/Sec), autenticação JWT, rotas base
 ├── eda/        # Notebook de EDA e dataset (Dados/IA)
-│ └── data/     # Arquivos do dataset usado na análise
+│ ├── eda_edubot_tp1.ipynb    # Notebook principal da EDA
+│ ├── escolha-do-dataset.md   # Fonte, licença e justificativa do dataset
+│ ├── requirements.txt
+│ ├── data/                   # Dataset bruto, licença e dataset tratado
+│ └── figures/                # Figuras exportadas pelo notebook
 ├── dfd/        # Diagrama de fluxo de dados (DFD) e análise CIA
 └── README.md   # Este arquivo
 ```
 
+
+
 ## API (Infra/Sec)
+
+
 
 ### O que foi implementado
 
@@ -34,6 +42,8 @@ Este repositório reúne a primeira entrega do projeto (TP1), com foco na escolh
   - `GET /health` - pública, não exige autenticação.
   - `POST /auth/token` - login (usuário/senha via form OAuth2), retorna um JWT.
   - `POST /predict` - protegida por JWT; retorna **401** sem token e **200** com token válido. A resposta ainda é um **placeholder**: a classificação real de categoria (burocrático/pedagógico) e urgência será implementada quando o modelo/agente do EduBot Analytics existir, em etapas futuras do bloco.
+
+
 
 ### Estrutura do código
 
@@ -59,6 +69,8 @@ api/
 └── .env.example
 ```
 
+
+
 ### Como instalar (Windows / PowerShell)
 
 ```powershell
@@ -76,6 +88,8 @@ pip install -r requirements-dev.txt
 Copy-Item .env.example .env
 # edite o .env e defina uma SECRET_KEY própria
 ```
+
+
 
 ### Como rodar
 
@@ -118,10 +132,14 @@ O projeto usa [Black](https://black.readthedocs.io/) para formatação automáti
 python -m black app/
 ```
 
+
+
 ### Observações importantes
 
 - A base de usuários em `app/db/fake_db.py` é **em memória**, criada apenas para validar o fluxo de autenticação nesta entrega. Persistência real (banco de dados) fica para uma etapa posterior do projeto.
 - `SECRET_KEY` no `.env.example` é só um placeholder de desenvolvimento, nunca deve ser usada como está, nem versionada.
+
+
 
 ## DFD e Análise CIA
 
@@ -142,6 +160,60 @@ Resumo da análise CIA (detalhamento completo em `dfd/analise-cia.md`):
 | `POST /predict` | Alta | Alta | Média |
 | User Store (`fake_db.py`) | Altíssima | Alta | Baixa (risco conhecido) |
 
+
+
+
 ## EDA (Análise Exploratória de Dados)
 
-_Seção à ser adicionada._
+Usamos o dataset **Bitext - Customer Service Tagged Training Dataset** (Bitext Innovations, 2024, licença CDLA-Sharing-1.0): 26.872 registros em inglês, com texto livre (`instruction`) e rótulo em duas camadas (`category` → `intent`). A justificativa completa, licença e alternativas descartadas estão em `[eda/escolha-do-dataset.md](eda/escolha-do-dataset.md)`.
+
+A análise está no notebook `[eda/eda_edubot_tp1.ipynb](eda/eda_edubot_tp1.ipynb)`. Em resumo:
+
+- **Saída:** 26.872 → **21.006 registros × 17 colunas** (78,2% retidos), em `eda/data/edubot_dataset_tratado.csv`
+- **Limpeza:** removi duplicatas do par (`instruction`, `intent`) (−2.237), descartei 4 intenções logísticas sem equivalente acadêmico (−3.629) e remapeei as 23 restantes para o vocabulário do EduBot
+- **Categorias finais:** FINANCEIRO (30,7%), ACADEMICO (28,6%), SUPORTE (14,3%), CADASTRO (12,2%), FEEDBACK (9,5%), ACESSO (4,7%)
+- **Figuras:** 6 gráficos em `[eda/figures/](eda/figures/)`
+
+
+
+### Hipóteses (detalhes na seção 7 do notebook)
+
+
+| Hipótese                                              | Resultado  | O que isso muda                                                                      |
+| ----------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------ |
+| H1 — pedidos com justificativa são mais longos        | Parcial    | `n_palavras` pode ser feature auxiliar, mas o sinal principal continua sendo o texto |
+| H2 — hostilidade indica o tipo de pedido              | Refutada   | `urgencia_proxy` não serve; no TP2 precisamos de rótulo de urgência de verdade       |
+| H3 — ~49% das mensagens têm typo, gíria ou abreviação | Confirmada | Filtro por palavra-chave não segura; defesa precisa ser semântica                    |
+| H4 — ~17% dos pedidos são de cadastro ou acesso       | Confirmada | Reforça a necessidade de checar dono do recurso (IDOR) no TP2                        |
+
+
+
+
+### Limitações
+
+Dataset sintético, em inglês, com vocabulário de e-commerce (adaptamos os rótulos, não as frases). Sem rótulo de urgência utilizável. As hipóteses ainda são observacionais — teste estatístico fica pro TP2.
+
+### Como rodar
+
+```powershell
+cd eda
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+jupyter notebook eda_edubot_tp1.ipynb
+```
+
+O notebook roda de ponta a ponta com os dados já em `eda/data/`.
+
+---
+
+
+
+## Uso de IA neste trabalho
+
+Conforme a política de Sinal Verde do enunciado:
+
+- Usei o **Claude** na triagem de datasets, pra montar a estrutura do notebook e revisar texto.
+- Escolha do dataset, mapeamento de domínio, limpeza e hipóteses foram decisões minhas - revisei tudo antes de entregar.
+- Os números citados aqui e no notebook vêm da execução do código sobre `eda/data/`; dá pra reproduzir rodando o notebook.
+
