@@ -37,3 +37,16 @@ Relatório completo exportado em: [`zap-report.html`](zap-report.html)
 - **O que foi detectado:** o header HSTS está presente mesmo em respostas servidas por HTTP puro (sem TLS).
 - **Status:** ⚠️ Risco aceito
 - **Justificativa:** HSTS só tem efeito prático sobre HTTPS, navegadores ignoram esse header quando recebido por conexão não criptografada, então ele fica inerte no ambiente de desenvolvimento local. Isso é esperado: implementar HSTS é um requisito explícito da tarefa 3, e o header passa a funcionar normalmente assim que a API for implantada atrás de HTTPS/TLS.
+
+## Verificação da correção (segundo scan)
+
+Após aplicar as correções acima, um segundo scan foi executado para confirmar a remediação. O relatório completo está em [`zap-report-verificacao.html`](zap-report-verificacao.html), e pode ser comparado com o scan original em [`zap-report-inicial.html`](zap-report-inicial.html)).
+
+| Finding | Status no scan original | Status no scan de verificação |
+| --- | --- | --- |
+| CSP: Failure to Define Directive with No Fallback | Médio | Ausente - correção confirmada |
+| CSP Header Not Set (`/openapi.json`) | Médio | Ausente - correção confirmada |
+| Server Leaks via header "Server" | Informativo | Ausente - correção confirmada |
+| Strict-Transport-Security em HTTP puro | Informativo | Presente - esperado (risco aceito, não uma correção pendente) |
+
+**Observação:** o scan de verificação também identificou dois alertas informativos adicionais (*Solicitação de autenticação identificada* e *Session Management Response Identified*), gerados pelo add-on de Authentication Helper do ZAP ao reconhecer o padrão de login da API. Não são achados de segurança, o próprio ZAP classifica o primeiro deles como informativo sem necessidade de correção, e não fazem parte do escopo original de findings desta entrega.
