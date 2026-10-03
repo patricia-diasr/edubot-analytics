@@ -1,46 +1,46 @@
 # Relatório de Findings - OWASP ZAP
 
-Scan passivo executado com OWASP ZAP 2.17.0 contra a API rodando localmente (`http://127.0.0.1:8000`), com tráfego autenticado real gerado através do navegador embutido do ZAP e do Swagger UI (`/docs`).
+Fiz um scan passivo com o OWASP ZAP 2.17.0 contra a API rodando localmente em `http://127.0.0.1:8000`. Para gerar tráfego autenticado, usei o navegador embutido do ZAP e o Swagger UI em `/docs`.
 
-Relatório completo exportado em: [`zap-report.html`](zap-report.html)
+Relatório inicial exportado em: [`zap-report-inicial.html`](zap-report-inicial.html)
 
 ## Findings (severidade Medium)
 
 ### CSP: Failure to Define Directive with No Fallback
 
 - **Severidade:** Médio
-- **O que foi detectado:** a Content-Security-Policy configurada (`default-src 'none'`) não define explicitamente as diretivas `frame-ancestors`, `base-uri` e `form-action`.
-- **Por que é um problema:** ao contrário da maioria das diretivas de CSP, essas três **não seguem o fallback de `default-src`**, ficam sem nenhuma restrição a menos que sejam declaradas explicitamente, mesmo com uma política restritiva definida.
+- **O que foi detectado:** a Content-Security-Policy configurada (`default-src 'none'`) não definia explicitamente `frame-ancestors`, `base-uri` e `form-action`.
+- **Por que é um problema:** essas três diretivas não usam o fallback de `default-src`. Então, mesmo com uma política bem restritiva, elas ficam sem uma regra própria se não forem declaradas.
 - **Status:** ✅ Corrigido
-- **Justificativa:** a CSP foi expandida para `default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`, fechando a lacuna.
+- **O que fiz:** expandi a CSP para `default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`.
 
 ### Content Security Policy (CSP) Header Not Set (em /openapi.json)
 
 - **Severidade:** Médio
 - **O que foi detectado:** a rota `/openapi.json` não retornava o header Content-Security-Policy.
-- **Por que é um problema:** essa exclusão foi um erro de escopo, não uma necessidade real, `/openapi.json` é um arquivo JSON estático, que não carrega scripts de CDN (diferente de `/docs` e `/redoc`, que são páginas HTML e precisam da exceção).
+- **Por que aconteceu:** eu tinha colocado essa rota na lista de exceções, mas ela não precisava estar lá. `/openapi.json` retorna JSON e não carrega scripts externos, diferente de `/docs` e `/redoc`, que são páginas HTML.
 - **Status:** ✅ Corrigido
-- **Justificativa:** removido `/openapi.json` da lista de exceção da CSP, agora só `/docs` e `/redoc` ficam de fora.
+- **O que fiz:** removi `/openapi.json` da exceção. Agora só `/docs` e `/redoc` ficam de fora da CSP padrão.
 
 ## Findings de baixa severidade / informativos
 
 ### Server Leaks its Webserver Application via "Server" HTTP Response Header Field
 
 - **Severidade:** Informativo
-- **O que foi detectado:** toda resposta incluía `Server: uvicorn`, revelando a stack de aplicação usada.
+- **O que foi detectado:** as respostas incluíam `Server: uvicorn`, o que revela a tecnologia usada no servidor.
 - **Status:** ✅ Corrigido
-- **Justificativa:** o header não pode ser removido via middleware da aplicação (o Uvicorn o adiciona na camada de transporte, depois da resposta da aplicação). A correção foi subir o servidor com a flag nativa `--no-server-header`.
+- **O que fiz:** tentei primeiro remover o header pelo middleware, mas o Uvicorn adiciona esse valor depois que a aplicação já respondeu. A correção foi iniciar o servidor com `--no-server-header`.
 
 ### Strict-Transport-Security Header on Plain HTTP Response
 
 - **Severidade:** Informativo
-- **O que foi detectado:** o header HSTS está presente mesmo em respostas servidas por HTTP puro (sem TLS).
+- **O que foi detectado:** o header HSTS aparece mesmo nas respostas servidas por HTTP puro, sem TLS.
 - **Status:** ⚠️ Risco aceito
-- **Justificativa:** HSTS só tem efeito prático sobre HTTPS, navegadores ignoram esse header quando recebido por conexão não criptografada, então ele fica inerte no ambiente de desenvolvimento local. Isso é esperado: implementar HSTS é um requisito explícito da tarefa 3, e o header passa a funcionar normalmente assim que a API for implantada atrás de HTTPS/TLS.
+- **Por que mantive assim:** o HSTS só tem efeito real em HTTPS. Navegadores ignoram esse header quando ele chega por uma conexão HTTP, então no ambiente local ele fica inerte. Como implementar HSTS era um requisito da tarefa 3, mantive o header. Quando a API estiver atrás de HTTPS/TLS, ele passa a funcionar normalmente.
 
 ## Verificação da correção (segundo scan)
 
-Após aplicar as correções acima, um segundo scan foi executado para confirmar a remediação. O relatório completo está em [`zap-report-verificacao.html`](zap-report-verificacao.html), e pode ser comparado com o scan original em [`zap-report-inicial.html`](zap-report-inicial.html)).
+Depois das correções, rodei um segundo scan para conferir se os findings tinham sumido. O relatório completo ficou em [`zap-report-verificacao.html`](zap-report-verificacao.html), e o scan original está em [`zap-report-inicial.html`](zap-report-inicial.html).
 
 | Finding | Status no scan original | Status no scan de verificação |
 | --- | --- | --- |
@@ -49,4 +49,4 @@ Após aplicar as correções acima, um segundo scan foi executado para confirmar
 | Server Leaks via header "Server" | Informativo | Ausente - correção confirmada |
 | Strict-Transport-Security em HTTP puro | Informativo | Presente - esperado (risco aceito, não uma correção pendente) |
 
-**Observação:** o scan de verificação também identificou dois alertas informativos adicionais (*Solicitação de autenticação identificada* e *Session Management Response Identified*), gerados pelo add-on de Authentication Helper do ZAP ao reconhecer o padrão de login da API. Não são achados de segurança, o próprio ZAP classifica o primeiro deles como informativo sem necessidade de correção, e não fazem parte do escopo original de findings desta entrega.
+**Observação:** o scan de verificação também mostrou dois alertas informativos a mais: *Solicitação de autenticação identificada* e *Session Management Response Identified*. Eles foram gerados pelo Authentication Helper do ZAP ao reconhecer o padrão de login da API. Não são falhas de segurança apontadas para correção e não faziam parte dos findings originais desta entrega.
