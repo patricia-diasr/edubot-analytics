@@ -25,7 +25,7 @@ def test_acesso_a_solicitacao_de_outro_usuario_retorna_404(
         json={"mensagem": "Preciso trancar Calculo II"},
         headers={"Authorization": f"Bearer {token_aluno1}"},
     )
-    
+
     assert criar.status_code == 200
     solicitacao_id = criar.json()["id"]
 
@@ -61,9 +61,9 @@ def test_fluxo_valido_login_e_predict(client: TestClient, session: Session):
         json={"mensagem": "Quero consultar minhas notas"},
         headers={"Authorization": f"Bearer {token}"},
     )
-    
+
     assert resposta.status_code == 200
     corpo = resposta.json()
-    
+
     assert corpo["categoria"] == "placeholder"
     assert "id" in corpo

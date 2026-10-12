@@ -14,7 +14,9 @@ class TokenData(SQLModel):
 
 
 class SolicitacaoCreate(SQLModel):
-    model_config = ConfigDict(extra="forbid")
+    # extra="forbid" rejeita campos não declarados (422) e str_strip_whitespace remove
+    # espaços das pontas antes da validação, então mensagem só com espaços é recusada
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     mensagem: str = Field(min_length=1, max_length=2000)
 
 

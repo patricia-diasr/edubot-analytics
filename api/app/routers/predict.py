@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
+from app.core.config import settings
 from app.core.database import get_session
+from app.core.rate_limit import limiter
 from app.core.security import get_current_user
 from app.models.db_models import Solicitacao, User
 from app.models.schemas import SolicitacaoCreate, SolicitacaoRead
@@ -9,7 +11,9 @@ router = APIRouter(tags=["predict"])
 
 
 @router.post("/predict", response_model=SolicitacaoRead)
+@limiter.limit(settings.RATE_LIMIT_PREDICT)
 def predict(
+    request: Request,
     payload: SolicitacaoCreate,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
