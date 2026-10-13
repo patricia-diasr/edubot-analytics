@@ -78,3 +78,23 @@ def get_token(client: TestClient, username: str, password: str) -> str:
 
     assert response.status_code == 200, response.text
     return response.json()["access_token"]
+
+
+def auth_headers(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(name="headers_aluno1")
+def headers_aluno1_fixture(client: TestClient, session: Session) -> dict:
+    """Cria o aluno1, faz login e devolve o header Authorization pronto"""
+
+    create_user(session, "aluno1", "senha-do-aluno-1")
+    return auth_headers(get_token(client, "aluno1", "senha-do-aluno-1"))
+
+
+@pytest.fixture(name="headers_aluno2")
+def headers_aluno2_fixture(client: TestClient, session: Session) -> dict:
+    """Cria o aluno2, faz login e devolve o header Authorization pronto"""
+
+    create_user(session, "aluno2", "senha-do-aluno-2")
+    return auth_headers(get_token(client, "aluno2", "senha-do-aluno-2"))
