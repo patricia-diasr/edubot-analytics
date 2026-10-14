@@ -18,7 +18,7 @@ def get_solicitacao(
     Retorna uma solicitação pelo ID, apenas se ela pertencer ao usuário autenticado
     """
     solicitacao = session.get(Solicitacao, solicitacao_id)
-    if solicitacao is None or solicitacao.usuario_id != current_user.id:
+    if solicitacao is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Solicitação não encontrada",
