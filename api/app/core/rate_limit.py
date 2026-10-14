@@ -11,12 +11,19 @@ def get_client_ip(request: Request) -> str:
     """
     Descobre o IP real do cliente para o rate limiting.
 
+    Com CLIENT_IP_HEADER definido (ex: cf-connecting-ip), usa o valor desse header, que
+    é escrito pelo proxy e não pode ser escolhido pelo cliente.
     Sem proxy (TRUSTED_PROXY_HOPS=0), usa o IP da conexão.
     Atrás de N proxies confiáveis, cada proxy acrescenta ao final do X-Forwarded-For o IP
     de quem se conectou a ele. Por isso o IP real é o N-ésimo valor contando do fim.
     Os valores mais à esquerda podem ter sido escritos pelo próprio cliente e não são
     usados, senão bastaria trocar o header a cada tentativa para escapar do limite
     """
+
+    if settings.CLIENT_IP_HEADER:
+        ip_do_proxy = request.headers.get(settings.CLIENT_IP_HEADER, "").strip()
+        if ip_do_proxy:
+            return ip_do_proxy
 
     hops = settings.TRUSTED_PROXY_HOPS
     if hops <= 0:

@@ -95,10 +95,16 @@ def test_predict_retorna_429_apos_exceder_o_limite(
     assert respostas[-1] == 429
 
 
-def _request(ip_conexao: str, x_forwarded_for: str | None = None) -> Request:
+def _request(
+    ip_conexao: str,
+    x_forwarded_for: str | None = None,
+    cf_connecting_ip: str | None = None,
+) -> Request:
     headers = []
     if x_forwarded_for is not None:
         headers.append((b"x-forwarded-for", x_forwarded_for.encode()))
+    if cf_connecting_ip is not None:
+        headers.append((b"cf-connecting-ip", cf_connecting_ip.encode()))
     return Request({"type": "http", "client": (ip_conexao, 12345), "headers": headers})
 
 
@@ -122,3 +128,46 @@ def test_ip_do_cliente_atras_de_proxy(
     monkeypatch.setattr(settings, "TRUSTED_PROXY_HOPS", hops)
 
     assert get_client_ip(_request("9.9.9.9", x_forwarded_for)) == esperado
+
+
+def test_ip_do_cliente_pelo_header_do_proxy(monkeypatch):
+    """
+    No Render, o IP real vem no cf-connecting-ip (escrito pela Cloudflare). O
+    X-Forwarded-For enviado pelo cliente é ignorado
+    """
+
+    monkeypatch.setattr(settings, "CLIENT_IP_HEADER", "cf-connecting-ip")
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_HOPS", 1)
+
+    requisicao = _request("10.26.25.107", "1.2.3.4, 10.0.0.1", "187.180.167.89")
+
+    assert get_client_ip(requisicao) == "187.180.167.89"
+
+
+def test_sem_o_header_do_proxy_usa_a_regra_de_hops(monkeypatch):
+    monkeypatch.setattr(settings, "CLIENT_IP_HEADER", "cf-connecting-ip")
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_HOPS", 1)
+
+    assert get_client_ip(_request("9.9.9.9", "6.6.6.6, 203.0.113.7")) == "203.0.113.7"
+
+
+def test_limite_vale_por_cliente_atras_do_proxy(
+    client: TestClient, session: Session, monkeypatch
+):
+    """
+    Atrás do proxy, cada cliente tem o próprio contador: o bloqueio de um atacante não
+    impede o login de outro aluno (evita negação de serviço no login)
+    """
+
+    monkeypatch.setattr(settings, "CLIENT_IP_HEADER", "cf-connecting-ip")
+    create_user(session, "aluno1", "senha-do-aluno-1")
+
+    atacante = {"cf-connecting-ip": "203.0.113.66"}
+    for _ in range(LIMITE_LOGIN):
+        _login(client, "errada", atacante)
+
+    assert _login(client, "errada", atacante).status_code == 429
+    outro_aluno = _login(
+        client, "senha-do-aluno-1", {"cf-connecting-ip": "198.51.100.7"}
+    )
+    assert outro_aluno.status_code == 200

@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # Atrás de um proxy, o IP de quem conecta é sempre o do proxy, então o IP real do
     # cliente precisa ser lido do header X-Forwarded-For
     TRUSTED_PROXY_HOPS: int = 0
+    # Header com o IP real do cliente, preenchido por um proxy confiável que sobrescreve
+    # qualquer valor enviado pelo cliente. No Render, a Cloudflare fica na frente e envia
+    # o IP em "cf-connecting-ip". Quando definido, tem prioridade sobre TRUSTED_PROXY_HOPS
+    CLIENT_IP_HEADER: Optional[str] = None
 
     # Senhas dos usuários de teste criados na inicialização. Usuário sem senha definida
     # não é criado

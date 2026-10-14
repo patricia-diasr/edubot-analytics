@@ -4,7 +4,7 @@ A API está publicada no [Render](https://render.com), no plano gratuito, como u
 Service** criado pelo painel. Este documento registra a configuração usada, para que o
 serviço possa ser recriado e auditado.
 
-**URL pública:** _a preencher após o deploy_
+**URL pública:** https://edubot-analytics.onrender.com (documentação em [/docs](https://edubot-analytics.onrender.com/docs))
 
 ## Configuração do serviço
 
@@ -26,7 +26,7 @@ serviço possa ser recriado e auditado.
 | Variável | Valor | Observação |
 | --- | --- | --- |
 | `SECRET_KEY` | gerada aleatoriamente | Chave de assinatura do JWT. Nunca aparece no código nem no repositório. A API não inicia sem ela |
-| `TRUSTED_PROXY_HOPS` | `1` | A API fica atrás do proxy do Render, então o IP real do cliente é lido do `X-Forwarded-For` (ver `api/app/core/rate_limit.py`). Valor confirmado com teste após o deploy |
+| `CLIENT_IP_HEADER` | `cf-connecting-ip` | A API fica atrás da Cloudflare e dos balanceadores do Render. O IP real do cliente vem nesse header, escrito pela Cloudflare (ver `api/app/core/rate_limit.py` e a seção abaixo) |
 | `SEED_PASSWORD_ALUNO1` | definida no painel | Senha do usuário de teste `aluno.teste` |
 | `SEED_PASSWORD_ALUNO2` | definida no painel | Senha do usuário de teste `aluno.teste2` |
 | `SEED_PASSWORD_ALUNO3` | definida no painel | Senha do usuário de teste `aluno.teste3` |
@@ -43,3 +43,21 @@ pentest, e não ficam registradas no repositório.
   inicialização, o que também desfaz qualquer alteração feita durante o pentest.
 - **Rate limit em memória:** o contador também zera quando o serviço reinicia. Como há
   uma única instância, o limite continua valendo enquanto ela está no ar.
+
+## Rate limit atrás do proxy (achado da verificação pós-deploy)
+
+Na primeira versão publicada, o rate limit usava `TRUSTED_PROXY_HOPS=1` (último valor do
+`X-Forwarded-For`). O teste contra a URL pública mostrou que **7 tentativas de login
+seguidas não geravam 429**. Os logs revelaram o motivo: o último valor do
+`X-Forwarded-For` é o IP interno do balanceador do Render (`10.x.x.x`), e não o do
+cliente. Como há dois balanceadores, todos os usuários dividiam apenas dois contadores:
+
+- o limite efetivo subia para ~10 tentativas por minuto;
+- um atacante podia esgotar o contador de propósito e bloquear o login de todos os
+  usuários (negação de serviço).
+
+**Correção:** o IP do cliente passou a ser lido do header `cf-connecting-ip`, que a
+Cloudflare (camada na frente do Render) preenche com o IP de quem abriu a conexão,
+sobrescrevendo qualquer valor enviado pelo cliente. O `X-Forwarded-For` enviado pelo
+cliente continua sendo ignorado. As tentativas de login que falham registram em log os
+headers de IP recebidos, para investigação.

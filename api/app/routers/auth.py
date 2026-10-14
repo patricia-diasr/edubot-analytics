@@ -52,8 +52,14 @@ def login_for_access_token(
 
     if not user:
         # Registra a tentativa para auditoria, sem nunca gravar a senha
+        # Os headers de IP recebidos ficam no log para investigação (ex: tentativa de
+        # falsificar o IP para escapar do rate limit)
         logger.warning(
-            "login_falhou usuario=%r ip=%s", form_data.username, get_client_ip(request)
+            "login_falhou usuario=%r ip=%s x_forwarded_for=%r cf_connecting_ip=%r",
+            form_data.username,
+            get_client_ip(request),
+            request.headers.get("x-forwarded-for"),
+            request.headers.get("cf-connecting-ip"),
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
