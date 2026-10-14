@@ -5,21 +5,49 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from app.core.config import settings
 from app.core.database import get_session
+from app.core.docs import RESPOSTA_422, resposta_429
 from app.core.rate_limit import get_client_ip, limiter
 from app.core.security import authenticate_user, create_access_token
-from app.models.schemas import Token
+from app.models.schemas import ErroSimples, Token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger("edubot.security")
 
 
-@router.post("/token", response_model=Token)
+@router.post(
+    "/token",
+    response_model=Token,
+    summary="Fazer login e obter o token JWT",
+    responses={
+        401: {
+            "model": ErroSimples,
+            "description": "Usuário ou senha incorretos. A resposta é a mesma para "
+            "usuário inexistente, para não revelar quais usuários existem",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Usuário ou senha incorretos"}
+                }
+            },
+        },
+        **RESPOSTA_422,
+        **resposta_429(settings.RATE_LIMIT_LOGIN),
+    },
+)
 @limiter.limit(settings.RATE_LIMIT_LOGIN)
 def login_for_access_token(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session),
 ):
+    """
+    Login no padrão OAuth2 *password flow*: envie `username` e `password` como
+    formulário (`application/x-www-form-urlencoded`). Retorna um JWT válido por
+    30 minutos, que deve ser enviado no header `Authorization: Bearer <token>`.
+
+    Limitado a **5 tentativas por minuto por IP**, contra força bruta. Tentativas que
+    falham são registradas em log (usuário e IP, nunca a senha)
+    """
+
     user = authenticate_user(session, form_data.username, form_data.password)
 
     if not user:

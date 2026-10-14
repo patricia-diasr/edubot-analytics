@@ -37,6 +37,22 @@ def test_login_retorna_429_apos_exceder_o_limite(client: TestClient, session: Se
     assert bloqueada.status_code == 429
 
 
+def test_resposta_429_informa_quando_tentar_de_novo(
+    client: TestClient, session: Session
+):
+    """O 429 segue o formato dos outros erros e traz o header Retry-After"""
+
+    create_user(session, "aluno1", "senha-do-aluno-1")
+    for _ in range(LIMITE_LOGIN):
+        _login(client, "errada")
+
+    bloqueada = _login(client, "errada")
+
+    assert bloqueada.status_code == 429
+    assert "detail" in bloqueada.json()
+    assert 1 <= int(bloqueada.headers["retry-after"]) <= 60
+
+
 def test_login_bloqueado_mesmo_com_a_senha_certa(client: TestClient, session: Session):
     """
     Depois do bloqueio nem a senha certa passa, senão o atacante continuaria testando
