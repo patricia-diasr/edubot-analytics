@@ -16,6 +16,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | **API publicada** | https://edubot-analytics.onrender.com |
 | **Documentação da API (Swagger)** | https://edubot-analytics.onrender.com/docs |
 | **Auditoria final de segurança (TP3)** | [`security/auditoria-final-tp3.md`](security/auditoria-final-tp3.md) |
+| **Plano de escopo do pentest (TP4)** | [`security/plano-pentest.md`](security/plano-pentest.md) |
 | **Modelagem de ameaças** | [DFD](dfd/dfd.md) · [Análise CIA](dfd/analise-cia.md) · [STRIDE](dfd/threat-model-stride.md) |
 | **Relatórios de entrega** | [`entregas/`](entregas/) |
 
@@ -70,6 +71,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 │   ├── auditoria-final-tp3.md    # achados, checklist OWASP API Top 10 e prontidão para o pentest
 │   ├── decisoes-tecnicas.md      # decisões técnicas do TP2 e do TP3
 │   ├── deploy-render.md          # configuração do deploy no Render
+│   ├── plano-pentest.md          # escopo do pentest (emitido e recebido) e segurança do agente
 │   ├── zap-findings.md           # findings do ZAP (TP2)
 │   ├── zap-findings-tp3.md       # findings do ZAP (TP3)
 │   ├── zap-report-*.html         # relatórios exportados do OWASP ZAP
