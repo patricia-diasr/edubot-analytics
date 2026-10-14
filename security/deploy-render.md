@@ -11,7 +11,7 @@ serviço possa ser recriado e auditado.
 | Campo no painel | Valor | Por quê |
 | --- | --- | --- |
 | Source | `patricia-diasr/edubot-analytics` | Acesso do Render ao GitHub limitado a este repositório |
-| Branch | `tp3-infra-sec` (passa a ser `main` após a integração do TP3) | |
+| Branch | `main` | Só recebe código por pull request com os testes de segurança e o pip-audit aprovados (ruleset). Durante o desenvolvimento do TP3, o deploy saía da branch `tp3-infra-sec` |
 | Language | Python 3 | Versão fixada em `api/.python-version` (3.12, a mesma do GitHub Actions) |
 | Region | Virginia (US East) | Região gratuita mais próxima do Brasil |
 | Root Directory | `api` | O código da API fica nessa pasta |
