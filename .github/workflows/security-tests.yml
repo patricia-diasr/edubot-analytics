@@ -1,0 +1,80 @@
+# Roda a suíte de testes de segurança da API e a auditoria de dependências a cada push
+# e em todo pull request para a main. Se algum job falhar, o commit fica marcado com ❌
+# e a regra de proteção da branch main bloqueia o merge do pull request.
+name: Testes de segurança
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Menor privilégio: o workflow só precisa ler o código
+permissions:
+  contents: read
+
+# Se chegar um push novo na mesma branch, cancela a execução antiga
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: api
+
+jobs:
+  pytest:
+    name: Testes de segurança (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            api/requirements.txt
+            api/requirements-dev.txt
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Rodar os testes
+        # Chave aleatória gerada só para esta execução, nenhum segredo real fica no CI
+        run: |
+          export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+          python -m pytest tests/ -v --junitxml=resultado-testes.xml
+
+      - name: Guardar o resultado dos testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultado-testes
+          path: api/resultado-testes.xml
+
+  pip-audit:
+    name: Auditoria de dependências (pip-audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v5
+
+      - name: Instalar Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Instalar o pip-audit
+        run: pip install pip-audit==2.10.1
+
+      - name: Procurar vulnerabilidades conhecidas nas dependências
+        run: pip-audit -r requirements.txt --desc

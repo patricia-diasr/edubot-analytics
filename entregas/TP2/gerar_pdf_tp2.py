@@ -21,6 +21,7 @@ from reportlab.platypus import (
 )
 
 ROOT = Path(__file__).resolve().parent
+REPO_ROOT = ROOT.parents[1]
 SOURCE = ROOT / "relatorio_tp2.md"
 OUTPUT = ROOT / "maite_silva_PB_TP2.pdf"
 
@@ -152,13 +153,13 @@ def build_story():
     figures = [
         (
             "Heatmap de correlação",
-            ROOT / "eda" / "figures" / "fig7_heatmap_correlacao.png",
+            REPO_ROOT / "eda" / "figures" / "fig7_heatmap_correlacao.png",
         ),
         (
             "Comprimento por categoria",
-            ROOT / "eda" / "figures" / "fig8_scatter_comprimento.png",
+            REPO_ROOT / "eda" / "figures" / "fig8_scatter_comprimento.png",
         ),
-        ("Comprimento e ruído", ROOT / "eda" / "figures" / "fig9_scatter_ruido.png"),
+        ("Comprimento e ruído", REPO_ROOT / "eda" / "figures" / "fig9_scatter_ruido.png"),
     ]
     for caption, path in figures:
         story.append(Paragraph(caption, styles["Heading2Arial"]))

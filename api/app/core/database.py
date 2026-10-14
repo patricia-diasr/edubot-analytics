@@ -1,10 +1,9 @@
 from typing import Generator
 from sqlmodel import Session, SQLModel, create_engine
-
-DATABASE_URL = "sqlite:///./edubot.db"
+from app.core.config import settings
 
 engine = create_engine(
-    DATABASE_URL, echo=False, connect_args={"check_same_thread": False}
+    settings.DATABASE_URL, echo=False, connect_args={"check_same_thread": False}
 )
 
 
