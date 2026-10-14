@@ -50,7 +50,7 @@ Relatório inicial exportado em: [`zap-report-tp3-inicial.html`](zap-report-tp3-
 
 - **Severidade:** Informativo
 - **O que foi detectado:** as respostas não tinham o header `Cache-Control`.
-- **Status:** ✅ Corrigido
+- **Status:** ✅ Corrigido (o alerta informativo permanece, ver a verificação abaixo)
 - **O que fiz:** todas as respostas passaram a enviar `Cache-Control: no-store`. As respostas da API podem conter o token de acesso (`/auth/token`) e dados dos alunos, que não devem ficar guardados no cache do navegador nem de proxies.
 
 ### Server Leaks its Webserver Application via "Server" HTTP Response Header Field
@@ -68,5 +68,29 @@ Relatório inicial exportado em: [`zap-report-tp3-inicial.html`](zap-report-tp3-
 
 ## Verificação da correção (segundo scan)
 
-_A preencher após o scan de verificação contra a versão corrigida
-(`zap-report-tp3-verificacao.html`)._
+Depois de publicar as correções no Render, rodei um segundo scan passivo, desta vez com o
+site da API incluído no contexto e o painel de alertas mostrando só as URLs em escopo. O
+tráfego cobriu login, `/docs`, `/openapi.json`, `/health`, `/predict` (válido e com campo
+extra), `/solicitacoes/{id}` e `/redoc`, que agora responde 404.
+
+Relatório de verificação: [`zap-report-tp3-verificacao.html`](zap-report-tp3-verificacao.html)
+
+| Finding | Scan inicial | Scan de verificação |
+| --- | --- | --- |
+| Content Security Policy (CSP) Header Not Set | Médio | Ausente - correção confirmada |
+| Sub Resource Integrity Attribute Missing | Médio | Ausente - correção confirmada |
+| Cross-Domain JavaScript Source File Inclusion | Baixo | Ausente - o ZAP deixou de apontar o script da CDN, agora com SRI |
+| Re-examine Cache-control Directives | Informativo | Presente - esperado (ver abaixo) |
+| Server Leaks via "Server" (`cloudflare`) | Informativo | Presente - esperado (risco aceito) |
+| Modern Web Application, Session Management, Solicitação de autenticação | Informativo | Presentes - não são falhas |
+
+**Resultado: nenhum finding Alto, Médio ou Baixo.** Restaram apenas alertas informativos.
+
+**Sobre o "Re-examine Cache-control Directives":** o alerta continua listado mesmo com
+`Cache-Control: no-store` presente nas respostas (o próprio relatório mostra o header como
+evidência). O ZAP recomenda a combinação `no-cache, no-store, must-revalidate`, mas o
+`no-store` sozinho já proíbe que o navegador ou proxies guardem qualquer cópia da resposta
+(RFC 9111), que é o objetivo. Por isso o alerta foi mantido como informativo aceito.
+
+Prints: `entregas/TP3/prints/14-zap-verificacao-sites-e-alertas.png` (rotas exploradas e
+alertas em escopo) e `15-zap-verificacao-redoc-404.png` (`/redoc` removido).

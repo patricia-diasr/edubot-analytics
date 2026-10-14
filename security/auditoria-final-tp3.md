@@ -84,17 +84,20 @@ escala que será usada no relatório de pentest do TP4.
 Scan passivo com OWASP ZAP 2.17.0 contra a URL pública, com tráfego autenticado gerado pelo
 Swagger UI. Detalhes de cada finding em [`zap-findings-tp3.md`](zap-findings-tp3.md).
 
-| Finding | Risco | Status |
-| --- | --- | --- |
-| Content Security Policy (CSP) Header Not Set (`/docs`) | Médio | ✅ Corrigido: CSP própria no `/docs`, sem `'unsafe-inline'` |
-| Sub Resource Integrity Attribute Missing (`/docs`) | Médio | ✅ Corrigido: Swagger UI com versão fixa e SRI; `/redoc` removido |
-| Cross-Domain JavaScript Source File Inclusion (`/docs`) | Baixo | ⚠️ Aceito: coberto pelo SRI e pela versão fixa |
-| Re-examine Cache-control Directives | Informativo | ✅ Corrigido: `Cache-Control: no-store` em todas as respostas |
-| Server Leaks via "Server" (`cloudflare`) | Informativo | ⚠️ Aceito: header da plataforma, sem versão |
-| Modern Web Application, Session Management, Authentication Request | Informativo | Sem ação (não são falhas) |
+| Finding | Risco | Correção | Scan de verificação |
+| --- | --- | --- | --- |
+| Content Security Policy (CSP) Header Not Set (`/docs`) | Médio | CSP própria no `/docs`, sem `'unsafe-inline'` | ✅ Ausente |
+| Sub Resource Integrity Attribute Missing (`/docs`) | Médio | Swagger UI com versão fixa e SRI; `/redoc` removido | ✅ Ausente |
+| Cross-Domain JavaScript Source File Inclusion (`/docs`) | Baixo | Coberto pelo SRI e pela versão fixa | ✅ Ausente |
+| Re-examine Cache-control Directives | Informativo | `Cache-Control: no-store` em todas as respostas | ⚠️ Presente: o ZAP recomenda também `no-cache, must-revalidate`, mas `no-store` já impede o cache. Aceito |
+| Server Leaks via "Server" (`cloudflare`) | Informativo | Header da plataforma, sem versão | ⚠️ Presente: aceito |
+| Modern Web Application, Session Management, Authentication Request | Informativo | Não são falhas | Presentes |
+
+**Resultado final: nenhum finding Alto, Médio ou Baixo pendente.**
 
 - Relatório inicial: [`zap-report-tp3-inicial.html`](zap-report-tp3-inicial.html)
-- Relatório de verificação: _a preencher após o segundo scan_ (`zap-report-tp3-verificacao.html`)
+- Relatório de verificação: [`zap-report-tp3-verificacao.html`](zap-report-tp3-verificacao.html)
+- Prints: `entregas/TP3/prints/13-zap-inicial-alertas.png`, `14-zap-verificacao-sites-e-alertas.png` e `15-zap-verificacao-redoc-404.png`
 
 ## 4. Riscos aceitos
 
@@ -116,7 +119,7 @@ Swagger UI. Detalhes de cada finding em [`zap-findings-tp3.md`](zap-findings-tp3
 | Dados de teste disponíveis: 3 alunos, cada um com solicitações próprias, para testes de BOLA | ✅ | `api/app/db/seed.py`. As credenciais são entregues à dupla adversária no plano de escopo |
 | Documentação OpenAPI acessível | ✅ | https://edubot-analytics.onrender.com/docs, prints 09 a 11 |
 | Suíte de testes de segurança passando | ✅ | `pytest tests/ -v`: 67 testes. `security/evidencias/pytest-tp3.txt` |
-| Nenhum finding Médio ou Alto pendente | _a confirmar com o scan ZAP_ | Seção 3 |
+| Nenhum finding Médio ou Alto pendente | ✅ | Seção 3 (scan de verificação) |
 
 **Observação para a dupla adversária:** no plano gratuito, a API "dorme" após 15 minutos
 sem uso. O primeiro acesso depois disso leva cerca de 50 segundos.
