@@ -12,7 +12,7 @@ from app.core.docs import DESCRICAO_API, TAGS
 from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.core.security_headers import SecurityHeadersMiddleware
 from app.db.seed import seed_users
-from app.routers import auth, health, predict, solicitacoes
+from app.routers import auth, docs, health, predict, solicitacoes
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s"
@@ -36,6 +36,12 @@ app = FastAPI(
         "url": "https://github.com/patricia-diasr/edubot-analytics",
     },
     lifespan=lifespan,
+    # A página /docs é servida por app/routers/docs.py, com versão fixa do Swagger UI,
+    # SRI e CSP própria. O /redoc foi removido no TP3: não era necessário e carregava
+    # scripts e fontes de outros três domínios
+    docs_url=None,
+    redoc_url=None,
+    swagger_ui_oauth2_redirect_url=None,
 )
 
 
@@ -67,6 +73,7 @@ app.add_middleware(
 )
 app.add_middleware(SecurityHeadersMiddleware)
 
+app.include_router(docs.router)
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(predict.router)

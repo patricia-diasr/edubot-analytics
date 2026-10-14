@@ -24,6 +24,8 @@ Com 404, para quem está chamando a API, “não existe” e “não é seu” a
 
 ## Content Security Policy
 
+_Revisto no TP3: a exceção do `/docs` foi substituída por uma CSP própria, e o `/redoc` foi removido. Ver abaixo._
+
 **Exceção só para `/docs` e `/redoc`:** no começo, eu também tinha colocado `/openapi.json` na lista de exceções da CSP. Depois percebi que não precisava. Quem carrega JavaScript de CDN são as páginas HTML do Swagger e do Redoc. O `/openapi.json` é só JSON e não executa nada. O scan do ZAP confirmou que dava para tirar essa exceção.
 
 **Diretivas explícitas (`frame-ancestors`, `base-uri`, `form-action`):** essas diretivas não herdam o `default-src` da mesma forma que várias diretivas de fetch. Então, se não forem declaradas, ficam sem uma restrição específica. O ZAP apontou isso como finding Médio, e eu corrigi adicionando as três de forma explícita.
@@ -104,9 +106,21 @@ O workflow roda com permissão somente de leitura e não usa nenhum segredo real
 
 ## Documentação OpenAPI pública
 
-Mantive `/docs`, `/redoc` e `/openapi.json` públicos. A API vai ser alvo de pentest, e a segurança não pode depender de esconder as rotas. Uma documentação completa também ajuda a dupla adversária a testar o que realmente importa. Um teste garante que toda rota continue documentada com todas as respostas possíveis.
+Mantive `/docs` e `/openapi.json` públicos. A API vai ser alvo de pentest, e a segurança não pode depender de esconder as rotas. Uma documentação completa também ajuda a dupla adversária a testar o que realmente importa. Um teste garante que toda rota continue documentada com todas as respostas possíveis.
 
 ## Python 3.12 no CI e no Render
 
 Fixei a mesma versão do Python no GitHub Actions e no Render (`api/.python-version`), para que o que foi testado seja exatamente o que roda online. Sem isso, o Render usaria a 3.14 por padrão.
+
+## `/docs` com CSP própria, versão fixa e SRI (findings do ZAP)
+
+O scan do ZAP contra a API publicada apontou dois findings Médios na página `/docs`: ela não tinha CSP (era a exceção que eu tinha deixado no TP2) e carregava o Swagger UI da CDN sem verificação de integridade, com versão flutuante (`@5`).
+
+Em vez de manter a exceção, passei a servir a página `/docs` pela própria API, com:
+
+- **Versão fixa** do Swagger UI (5.33.0). Escolhi uma versão com algumas semanas de publicação, e não a mais nova (lançada 2 dias antes), para reduzir o risco de usar uma versão recém-comprometida.
+- **SRI (`integrity`)** nos dois arquivos da CDN: o navegador só executa o arquivo se o hash bater. Calculei os hashes sobre os arquivos baixados e conferi com os publicados pela jsDelivr.
+- **CSP própria e restrita**, sem `'unsafe-inline'`: scripts e estilos só da CDN, e o script de inicialização da página liberado pelo seu hash. Testei no navegador, e o Swagger funciona sem nenhuma violação de CSP. Há testes que quebram se a CSP ganhar `'unsafe-inline'` ou se o script mudar sem atualizar o hash.
+
+Também removi o `/redoc`: nenhuma rubrica pede uma segunda página de documentação, e ela carregava scripts e fontes de outros três domínios. E adicionei `Cache-Control: no-store` em todas as respostas, para tokens e dados de alunos não ficarem em cache.
 

@@ -65,7 +65,7 @@ escala que será usada no relatório de pentest do TP4.
 | API5 | Broken Function Level Authorization | A API só tem funções de aluno. Não existem rotas administrativas nem de alteração de notas | ✅ Não aplicável (sem funções privilegiadas) | `test_documentacao.py` garante que só existem as 4 rotas documentadas |
 | API6 | Unrestricted Access to Sensitive Business Flows | O único fluxo de negócio (`/predict`) exige autenticação e tem limite por IP | ✅ Resolvido | `test_rate_limit.py` |
 | API7 | Server Side Request Forgery | A API não faz requisições para URLs informadas pelo usuário | ✅ Não aplicável | Revisão de código |
-| API8 | Security Misconfiguration | HTTPS com redirecionamento e HSTS. Headers X-Frame-Options, X-Content-Type-Options e CSP em todas as respostas, inclusive de erro. CORS com allowlist. Sem header `Server: uvicorn`. 422 sem eco do valor enviado | ✅ Resolvido | `test_headers_cors.py` (10 testes); print 12; scan ZAP (seção 3) |
+| API8 | Security Misconfiguration | HTTPS com redirecionamento e HSTS. Headers X-Frame-Options, X-Content-Type-Options, CSP e `Cache-Control: no-store` em todas as respostas, inclusive de erro. `/docs` com CSP própria, versão fixa e SRI. CORS com allowlist. Sem header `Server: uvicorn`. 422 sem eco do valor enviado | ✅ Resolvido | `test_headers_cors.py` (13 testes); print 12; scan ZAP (seção 3) |
 | API9 | Improper Inventory Management | Uma única versão publicada, totalmente documentada no `/docs` com todos os códigos de resposta | ✅ Resolvido | `test_documentacao.py`; prints 09 a 11 |
 | API10 | Unsafe Consumption of APIs | A API ainda não consome APIs externas. Passa a ser relevante no TP4, quando o agente chamar um LLM | ⏳ Reavaliar no TP4 | Plano de segurança do agente |
 
@@ -81,7 +81,20 @@ escala que será usada no relatório de pentest do TP4.
 
 ## 3. Scan final com OWASP ZAP
 
-_A preencher após o scan passivo contra a URL pública (`security/zap-report-tp3.html`)._
+Scan passivo com OWASP ZAP 2.17.0 contra a URL pública, com tráfego autenticado gerado pelo
+Swagger UI. Detalhes de cada finding em [`zap-findings-tp3.md`](zap-findings-tp3.md).
+
+| Finding | Risco | Status |
+| --- | --- | --- |
+| Content Security Policy (CSP) Header Not Set (`/docs`) | Médio | ✅ Corrigido: CSP própria no `/docs`, sem `'unsafe-inline'` |
+| Sub Resource Integrity Attribute Missing (`/docs`) | Médio | ✅ Corrigido: Swagger UI com versão fixa e SRI; `/redoc` removido |
+| Cross-Domain JavaScript Source File Inclusion (`/docs`) | Baixo | ⚠️ Aceito: coberto pelo SRI e pela versão fixa |
+| Re-examine Cache-control Directives | Informativo | ✅ Corrigido: `Cache-Control: no-store` em todas as respostas |
+| Server Leaks via "Server" (`cloudflare`) | Informativo | ⚠️ Aceito: header da plataforma, sem versão |
+| Modern Web Application, Session Management, Authentication Request | Informativo | Sem ação (não são falhas) |
+
+- Relatório inicial: [`zap-report-tp3-inicial.html`](zap-report-tp3-inicial.html)
+- Relatório de verificação: _a preencher após o segundo scan_ (`zap-report-tp3-verificacao.html`)
 
 ## 4. Riscos aceitos
 
@@ -90,7 +103,7 @@ _A preencher após o scan passivo contra a URL pública (`security/zap-report-tp
 | Rate limit por IP, sem bloqueio por conta: um ataque distribuído (muitos IPs) contra um mesmo usuário não é barrado | Bloquear a conta permitiria que qualquer pessoa travasse o login de um aluno de propósito | Senhas de teste fortes e aleatórias. Tentativas registradas em log |
 | Contador do rate limit em memória: zera quando o serviço reinicia | Há uma única instância. Um armazenamento compartilhado (Redis) não é necessário nesse escopo | Reinícios são raros e não podem ser provocados pelo cliente |
 | Token JWT não pode ser revogado antes de expirar (não há logout no servidor) | A API não guarda sessão. Lista de revogação adicionaria estado e complexidade | Validade curta (30 min). Token de usuário removido é recusado |
-| `/docs` e `/redoc` sem a CSP restrita | As páginas do Swagger e do Redoc carregam scripts de uma CDN e não funcionariam com `default-src 'none'` | Demais headers mantidos. As páginas não recebem dados do usuário. `/openapi.json` tem a CSP restrita |
+| `/docs` carrega o Swagger UI de outro domínio (`cdn.jsdelivr.net`), finding Baixo do ZAP | Evita versionar ~1,5 MB de arquivos de terceiros no repositório | Versão fixa, SRI e CSP própria no `/docs`: um arquivo alterado na CDN não é executado |
 | Banco SQLite efêmero no plano gratuito do Render | Adequado ao escopo acadêmico. Os dados de teste são recriados a cada reinício | Facilita restaurar o estado depois do pentest |
 | Headers de infraestrutura (`server: cloudflare`, `x-render-origin-server: Render`) | Adicionados pela plataforma, fora do controle da aplicação. Não revelam versão de software | O header do servidor da aplicação (`uvicorn`) foi removido |
 
@@ -102,7 +115,7 @@ _A preencher após o scan passivo contra a URL pública (`security/zap-report-tp
 | Autenticação funcionando | ✅ | Print 10 (login pelo Authorize do Swagger) |
 | Dados de teste disponíveis: 3 alunos, cada um com solicitações próprias, para testes de BOLA | ✅ | `api/app/db/seed.py`. As credenciais são entregues à dupla adversária no plano de escopo |
 | Documentação OpenAPI acessível | ✅ | https://edubot-analytics.onrender.com/docs, prints 09 a 11 |
-| Suíte de testes de segurança passando | ✅ | `pytest tests/ -v`: 64 testes. `security/evidencias/pytest-tp3.txt` |
+| Suíte de testes de segurança passando | ✅ | `pytest tests/ -v`: 67 testes. `security/evidencias/pytest-tp3.txt` |
 | Nenhum finding Médio ou Alto pendente | _a confirmar com o scan ZAP_ | Seção 3 |
 
 **Observação para a dupla adversária:** no plano gratuito, a API "dorme" após 15 minutos

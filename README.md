@@ -35,7 +35,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | --- | --- | --- | --- |
 | **TP1** | Escolha do dataset, limpeza e EDA inicial | API FastAPI com JWT, DFD e análise CIA | `eda/eda_edubot_tp1.ipynb`, `eda/escolha-do-dataset.md`, `api/`, `dfd/` |
 | **TP2** | Correlações, teste de hipótese e relatório de EDA | Controles OWASP Top 10, rate limiting, testes pytest e scan OWASP ZAP | `eda/eda_edubot_tp2.ipynb`, `eda/relatorio_eda_tp2.md`, `security/`, `entregas/TP2/` |
-| **TP3** | Regressão linear e pergunta de classificação _(em andamento)_ | Auditoria final, 64 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `security/auditoria-final-tp3.md`, `.github/workflows/`, `dfd/`, `entregas/TP3/` |
+| **TP3** | Regressão linear e pergunta de classificação _(em andamento)_ | Auditoria final, 67 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `security/auditoria-final-tp3.md`, `.github/workflows/`, `dfd/`, `entregas/TP3/` |
 
 ## Estrutura do repositório
 
@@ -44,7 +44,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 │   └── security-tests.yml        # CI: pytest + pip-audit a cada push e PR
 ├── api/                          # API FastAPI (Infra/Sec)
 │   ├── app/                      # código da aplicação (detalhes abaixo)
-│   ├── tests/                    # 64 testes de segurança (pytest)
+│   ├── tests/                    # 67 testes de segurança (pytest)
 │   ├── requirements.txt          # dependências fixadas e auditadas
 │   ├── requirements-dev.txt      # pytest, httpx, black, pip-audit
 │   ├── .env.example              # modelo das variáveis de ambiente
@@ -71,6 +71,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 │   ├── decisoes-tecnicas.md      # decisões técnicas do TP2 e do TP3
 │   ├── deploy-render.md          # configuração do deploy no Render
 │   ├── zap-findings.md           # findings do ZAP (TP2)
+│   ├── zap-findings-tp3.md       # findings do ZAP (TP3)
 │   ├── zap-report-*.html         # relatórios exportados do OWASP ZAP
 │   └── evidencias/               # saídas do pytest e do pip-audit
 ├── entregas/                     # Relatórios de cada TP (Markdown, script e PDF)
@@ -89,7 +90,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | `POST /auth/token` | Pública (5 por minuto por IP) | Login (usuário e senha em formulário). Retorna um JWT válido por 30 minutos |
 | `POST /predict` | JWT (20 por minuto por IP) | Recebe a mensagem do aluno e cria uma `Solicitacao` ligada a ele. Categoria e urgência retornam `placeholder` até o TP4 |
 | `GET /solicitacoes/{id}` | JWT | Retorna uma solicitação, **somente se for do aluno autenticado** (senão, 404) |
-| `GET /docs`, `/redoc`, `/openapi.json` | Pública | Documentação OpenAPI, com todas as respostas possíveis de cada rota |
+| `GET /docs`, `/openapi.json` | Pública | Documentação OpenAPI (Swagger UI com versão fixa, SRI e CSP própria), com todas as respostas possíveis de cada rota |
 
 ### Controles de segurança
 
@@ -100,7 +101,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | Validação de entrada | Pydantic com `extra="forbid"` (campo extra → 422), mensagem de 1 a 2000 caracteres, ID inteiro maior ou igual a 1. O 422 não repete o valor enviado |
 | Banco de dados | SQLModel + SQLite, só com queries parametrizadas (sem SQL raw) |
 | Rate limiting | Login: 5 por minuto. `/predict`: 20 por minuto. Por IP real do cliente (`cf-connecting-ip` atrás do proxy do Render). 429 com `Retry-After` |
-| Headers HTTP | HSTS, X-Frame-Options, X-Content-Type-Options e Content-Security-Policy em todas as respostas. Sem o header `Server: uvicorn` |
+| Headers HTTP | HSTS, X-Frame-Options, X-Content-Type-Options, Content-Security-Policy e `Cache-Control: no-store` em todas as respostas. Sem o header `Server: uvicorn` |
 | CORS | Allowlist explícita de origens, métodos e headers |
 | Anti-enumeração | Mesma resposta e mesmo tempo para senha errada e usuário inexistente |
 | Logs | Login com falha registra usuário e IP (nunca a senha) |
@@ -132,7 +133,7 @@ api/
 │   ├── models/
 │   │   ├── schemas.py           # schemas de entrada e saída (Pydantic)
 │   │   └── db_models.py         # tabelas SQLModel (User, Solicitacao)
-│   ├── routers/                 # health, auth, predict, solicitacoes
+│   ├── routers/                 # docs (Swagger UI), health, auth, predict, solicitacoes
 │   └── db/
 │       └── seed.py              # usuários e solicitações de teste
 └── tests/
@@ -141,7 +142,7 @@ api/
     ├── test_bola.py             # 5 testes: ownership e enumeração de IDs
     ├── test_validacao_entrada.py # 16 testes: campos extras, tamanhos, SQL injection
     ├── test_rate_limit.py       # 13 testes: 429, IP falso, IP real atrás de proxy
-    ├── test_headers_cors.py     # 10 testes: headers em todas as respostas e CORS
+    ├── test_headers_cors.py     # 13 testes: headers, cache, CSP e SRI do /docs, CORS
     └── test_documentacao.py     # 8 testes: todas as rotas documentadas
 ```
 
@@ -186,7 +187,7 @@ A API sobe em `http://127.0.0.1:8000`, com a documentação em `http://127.0.0.1
 python -m pytest tests/ -v
 ```
 
-São 64 testes de segurança, cobrindo autenticação, BOLA, validação de entrada, rate limiting, headers, CORS e documentação. Os testes usam um banco em memória e uma chave própria, então não precisam do `.env`.
+São 67 testes de segurança, cobrindo autenticação, BOLA, validação de entrada, rate limiting, headers, CORS e documentação. Os testes usam um banco em memória e uma chave própria, então não precisam do `.env`.
 
 Para conferir as dependências:
 
@@ -229,7 +230,7 @@ python -m black app/ tests/
 
 O workflow [`.github/workflows/security-tests.yml`](.github/workflows/security-tests.yml) roda a cada push e em todo pull request para a `main`:
 
-1. **Testes de segurança (pytest):** os 64 testes, com uma chave gerada só para a execução.
+1. **Testes de segurança (pytest):** os 67 testes, com uma chave gerada só para a execução.
 2. **Auditoria de dependências (pip-audit):** falha se alguma dependência tiver vulnerabilidade conhecida.
 
 A `main` é protegida por um ruleset: só recebe código por pull request, e com os dois checks aprovados. Se um teste de segurança falhar, o merge fica bloqueado.
@@ -246,7 +247,7 @@ A API está publicada em https://edubot-analytics.onrender.com, como Web Service
 
 - **[`dfd/dfd.md`](dfd/dfd.md):** DFD versão 3, em dois diagramas: o fluxo de uma requisição (aluno → Cloudflare/Render → API → dados) e a cadeia de entrega (GitHub → Actions → Render). Inclui entradas, saídas e quatro trust boundaries.
 - **[`dfd/analise-cia.md`](dfd/analise-cia.md):** tríade CIA aplicada a 10 componentes.
-- **[`dfd/threat-model-stride.md`](dfd/threat-model-stride.md):** 31 ameaças STRIDE com controle e status. Inclui as ameaças do futuro agente (prompt injection para alterar notas ou acessar dados de outro aluno).
+- **[`dfd/threat-model-stride.md`](dfd/threat-model-stride.md):** 32 ameaças STRIDE com controle e status. Inclui as ameaças do futuro agente (prompt injection para alterar notas ou acessar dados de outro aluno).
 
 ![DFD - fluxo de uma requisição](dfd/dfd-v3-requisicao.png)
 

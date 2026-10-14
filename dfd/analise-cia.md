@@ -41,10 +41,10 @@ Render. Os componentes 1 a 5 foram revisados para refletir as mudanças do TP3.
 - **Integridade -> alta.** A aplicação confia no header `cf-connecting-ip`, escrito pela Cloudflare, para identificar o IP do cliente no rate limit. Esse header não pode ser falsificado: a Cloudflare bloqueia (403) requisições que tentam enviá-lo. Já o `X-Forwarded-For`, que o cliente pode escrever, é ignorado.
 - **Disponibilidade -> média.** É gerenciada pelo Render, fora do controle da dupla. No plano gratuito, o serviço "dorme" após 15 minutos sem uso e o primeiro acesso leva cerca de 50 segundos.
 
-## 7. GET /docs, /redoc e /openapi.json - Documentação (novo no TP3)
+## 7. GET /docs e /openapi.json - Documentação (novo no TP3)
 
 - **Confidencialidade -> baixa.** Documenta publicamente as rotas, os schemas e os controles de segurança. Isso é intencional: a API vai ser alvo de pentest, e a segurança não depende de esconder as rotas. A documentação não contém segredos nem dados de usuários.
-- **Integridade -> média.** Uma documentação errada levaria a usos incorretos da API. Um teste automatizado garante que todas as rotas continuam documentadas com todas as respostas possíveis.
+- **Integridade -> média.** Uma documentação errada levaria a usos incorretos da API. Um teste automatizado garante que todas as rotas continuam documentadas com todas as respostas possíveis. A página `/docs` carrega o Swagger UI de uma CDN com versão fixa e SRI: se o arquivo for adulterado na CDN, o navegador não o executa. Ela também tem uma CSP própria, sem `'unsafe-inline'` (correção de dois findings Médios do ZAP no TP3).
 - **Disponibilidade -> baixa.** Útil para quem consome a API, mas não afeta o funcionamento das demais rotas.
 
 ## 8. Variáveis de ambiente do Render - segredos (novo no TP3)
@@ -75,7 +75,7 @@ Render. Os componentes 1 a 5 foram revisados para refletir as mudanças do TP3.
 | GET /solicitacoes/{id} | Alta | Alta | Média |
 | Banco de dados (SQLite via SQLModel) | Altíssima | Alta | Baixa |
 | Borda (Cloudflare + Render) | Alta | Alta | Média |
-| Documentação (/docs, /redoc, /openapi.json) | Baixa | Média | Baixa |
+| Documentação (/docs, /openapi.json) | Baixa | Média | Baixa |
 | Variáveis de ambiente (segredos) | Altíssima | Alta | Alta |
 | Logs de segurança | Média | Média | Baixa |
 | Cadeia de entrega (CI/CD) | Média | Altíssima | Média |

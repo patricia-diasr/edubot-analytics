@@ -63,6 +63,8 @@ def test_schema_de_entrada_documenta_limites_e_proibe_campos_extras(spec: dict):
     assert schema["properties"]["mensagem"]["maxLength"] == 2000
 
 
-def test_docs_e_redoc_acessiveis(client: TestClient):
+def test_docs_acessivel_e_redoc_removido(client: TestClient):
+    """O /redoc foi removido no TP3 para reduzir a superfície (scripts de 3 domínios)"""
+
     assert client.get("/docs").status_code == 200
-    assert client.get("/redoc").status_code == 200
+    assert client.get("/redoc").status_code == 404

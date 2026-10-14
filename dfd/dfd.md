@@ -20,7 +20,7 @@ O DFD foi dividido em dois diagramas, escritos em Mermaid neste arquivo. As imag
 - **Processos:**
   - **Borda da plataforma (Cloudflare + balanceador do Render):** termina o HTTPS, redireciona HTTP para HTTPS e escreve o header `cf-connecting-ip` com o IP real do cliente.
   - **Middlewares da API:** headers de segurança, CORS e rate limit por IP real.
-  - **Rotas da API:** `GET /health`, `GET /docs` (e `/redoc`, `/openapi.json`), `POST /auth/token`, `POST /predict` e `GET /solicitacoes/{id}`.
+  - **Rotas da API:** `GET /health`, `GET /docs` (e `/openapi.json`), `POST /auth/token`, `POST /predict` e `GET /solicitacoes/{id}`.
   - **GitHub Actions:** roda os testes de segurança e o `pip-audit`.
   - **Render (build e deploy):** publica uma versão nova só depois que o CI aprova.
 - **Armazenamentos de dados:**
@@ -62,7 +62,7 @@ flowchart TB
       subgraph API["Processo: API FastAPI (Render, plano gratuito)"]
         MW["Middlewares<br/>headers de segurança, CORS<br/>rate limit por IP real"]
         Health["GET /health<br/>pública"]
-        Docs["GET /docs, /redoc, /openapi.json<br/>pública, documentação"]
+        Docs["GET /docs, /openapi.json<br/>pública, documentação"]
         Auth["POST /auth/token<br/>emite JWT, 5 por minuto"]
         Predict["POST /predict<br/>exige JWT, 20 por minuto"]
         Solic["GET /solicitacoes/id<br/>exige JWT, verifica ownership"]
@@ -138,7 +138,7 @@ flowchart LR
 **Saídas da API:**
 
 - Status de disponibilidade em `GET /health`
-- Especificação OpenAPI e páginas de documentação em `/openapi.json`, `/docs` e `/redoc`
+- Especificação OpenAPI em `/openapi.json` e página de documentação em `/docs`
 - Token de acesso (JWT) em `POST /auth/token`, ou 401 (credenciais inválidas), 422 (formulário inválido) ou 429 (limite excedido, com `Retry-After`)
 - Solicitação criada (id, categoria, urgência) em `POST /predict`, ou 401, 422 ou 429
 - Dados da solicitação em `GET /solicitacoes/{id}`, se pertencer ao aluno autenticado, ou 404 (inexistente ou de outro aluno), 401 ou 422

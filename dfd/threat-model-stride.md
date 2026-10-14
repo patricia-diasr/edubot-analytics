@@ -44,7 +44,8 @@ justificado) · 🔜 planejado (ameaça do agente, a tratar no TP4).
 | I4 | Variáveis de ambiente, repositório, logs | Vazamento de segredos | Segredos só no Render. `.env` no `.gitignore`. Chave oculta em erros de configuração. Senhas de teste fora do código | ✅ | `api/.env.example`. Achado A4 |
 | I5 | Todas as rotas | Mensagens de erro revelando detalhes internos ou repetindo dados enviados | Handler próprio do 422 sem eco. Sem modo debug | ✅ | `test_erro_422_nao_ecoa_o_valor_enviado` |
 | I6 | Borda | Descobrir a tecnologia do servidor (fingerprinting) | Header `Server: uvicorn` removido | ⚠️ Headers da plataforma (`server: cloudflare`) permanecem | Scan ZAP |
-| I7 | `/docs`, navegador | Clickjacking ou execução de scripts injetados | `X-Frame-Options: DENY`, CSP restrita, `nosniff` | ⚠️ `/docs` e `/redoc` sem a CSP restrita (precisam da CDN do Swagger) | `test_headers_cors.py`. Scan ZAP |
+| I7 | `/docs`, navegador | Clickjacking ou execução de scripts injetados | `X-Frame-Options: DENY`, `nosniff`, CSP restrita em todas as respostas. No `/docs`, CSP própria sem `'unsafe-inline'` | ✅ | `test_headers_cors.py`. `security/zap-findings-tp3.md` |
+| T7 | `/docs` → CDN | CDN comprometida ou versão maliciosa do Swagger UI executando código na página (com acesso ao token do Swagger) | Versão fixa e SRI (`integrity`) nos arquivos da CDN. `/redoc` removido | ✅ | `test_docs_carrega_swagger_com_versao_fixa_e_sri`. `security/zap-findings-tp3.md` |
 | D1 | `POST /auth/token` | Esgotar a CPU com muitas verificações bcrypt | Rate limit por IP real | ✅ | `test_rate_limit.py` |
 | D2 | `POST /auth/token` | Bloquear o login de todos esgotando um contador compartilhado | Contador por IP real do cliente (corrigido no TP3) | ✅ | `test_limite_vale_por_cliente_atras_do_proxy`. Achado A3 |
 | D3 | `POST /predict`, `POST /auth/token` | Payloads gigantes ou formulários maliciosos | Mensagem de até 2000 caracteres. `python-multipart` e `starlette` atualizados | ✅ | `test_mensagem_invalida_e_rejeitada`. Achado A2 |
@@ -72,9 +73,9 @@ modelo de linguagem com ferramentas (tool calling), surgem ameaças novas:
 | Categoria | Mitigadas | Aceitas | Planejadas (agente) |
 | --- | :---: | :---: | :---: |
 | Spoofing | 4 | 1 | 0 |
-| Tampering | 5 | 0 | 1 |
+| Tampering | 6 | 0 | 1 |
 | Repudiation | 1 | 1 | 0 |
-| Information disclosure | 5 | 2 | 2 |
+| Information disclosure | 6 | 1 | 2 |
 | Denial of service | 4 | 1 | 1 |
 | Elevation of privilege | 1 | 0 | 2 |
-| **Total** | **20** | **5** | **6** |
+| **Total** | **22** | **4** | **6** |
