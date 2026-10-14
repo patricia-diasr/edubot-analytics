@@ -2,9 +2,24 @@
 
 ## Sobre o projeto
 
-Este repositório contém o desenvolvimento do projeto **EduBot Analytics**, uma gente de IA para suporte acadêmico universitário, atendendo pedidos de matrícula, trancamento de disciplinas e consulta de notas desenvolvido como parte da disciplina **Projeto de Bloco: Análise e Segurança de Agentes de IA**.
+Este repositório contém o desenvolvimento do projeto **EduBot Analytics**, um agente de IA para suporte acadêmico universitário, que atende pedidos de matrícula, trancamento de disciplinas e consulta de notas. Ele foi desenvolvido como parte da disciplina **Projeto de Bloco: Análise e Segurança de Agentes de IA**.
 
-O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo desde a exploração de dados e o setup de uma API segura até a implementação de um agente de IA funcional e um pentest cruzado entre duplas. Este repositório reúne o progresso até o TP2: EDA do dataset, API com autenticação JWT e persistência real, controles OWASP Top 10 auditados via OWASP ZAP, e modelagem de ameaças (DFD + análise CIA).
+O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo desde a exploração de dados e o setup de uma API segura até a implementação de um agente de IA funcional e um pentest cruzado entre duplas.
+
+- **Desafio de IA:** classificar a urgência do pedido do aluno e a sua categoria (burocrático ou pedagógico).
+- **Desafio de segurança:** evitar que alunos manipulem o agente para alterar notas ou acessar registros de outros estudantes.
+
+### Links rápidos
+
+| | |
+| --- | --- |
+| **API publicada** | https://edubot-analytics.onrender.com |
+| **Documentação da API (Swagger)** | https://edubot-analytics.onrender.com/docs |
+| **Auditoria final de segurança (TP3)** | [`security/auditoria-final-tp3.md`](security/auditoria-final-tp3.md) |
+| **Modelagem de ameaças** | [DFD](dfd/dfd.md) · [Análise CIA](dfd/analise-cia.md) · [STRIDE](dfd/threat-model-stride.md) |
+| **Relatórios de entrega** | [`entregas/`](entregas/) |
+
+> A API está no plano gratuito do Render e "dorme" após 15 minutos sem uso. O primeiro acesso depois disso leva cerca de 50 segundos.
 
 ## Disciplina e equipe
 
@@ -14,74 +29,125 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | **Aluno A - Dados/IA** | Maitê Mota Belo de Souza Silva |
 | **Aluno B - Infra/Sec** | Patricia Dias Rodrigues |
 
+## Andamento por TP
+
+| TP | Dados/IA | Infra/Sec | Onde está |
+| --- | --- | --- | --- |
+| **TP1** | Escolha do dataset, limpeza e EDA inicial | API FastAPI com JWT, DFD e análise CIA | `eda/eda_edubot_tp1.ipynb`, `eda/escolha-do-dataset.md`, `api/`, `dfd/` |
+| **TP2** | Correlações, teste de hipótese e relatório de EDA | Controles OWASP Top 10, rate limiting, testes pytest e scan OWASP ZAP | `eda/eda_edubot_tp2.ipynb`, `eda/relatorio_eda_tp2.md`, `security/`, `entregas/TP2/` |
+| **TP3** | Regressão linear e pergunta de classificação _(em andamento)_ | Auditoria final, 64 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `security/auditoria-final-tp3.md`, `.github/workflows/`, `dfd/`, `entregas/TP3/` |
+
 ## Estrutura do repositório
 
 ```
-├── api/        # API FastAPI (Infra/Sec), autenticação JWT, rotas base
-├── eda/        # Notebook de EDA e dataset (Dados/IA)
-│ ├── eda_edubot_tp1.ipynb    # Notebook principal da EDA
-│ ├── escolha-do-dataset.md   # Fonte, licença e justificativa do dataset
-│ ├── requirements.txt
-│ ├── data/                   # Dataset bruto, licença e dataset tratado
-│ └── figures/                # Figuras exportadas pelo notebook
-├── dfd/        # Diagrama de fluxo de dados (DFD) e análise CIA
-├── security/   # Scan OWASP ZAP, findings e decisões técnicas (TP2)
-└── README.md   # Este arquivo
+├── .github/workflows/
+│   └── security-tests.yml        # CI: pytest + pip-audit a cada push e PR
+├── api/                          # API FastAPI (Infra/Sec)
+│   ├── app/                      # código da aplicação (detalhes abaixo)
+│   ├── tests/                    # 64 testes de segurança (pytest)
+│   ├── requirements.txt          # dependências fixadas e auditadas
+│   ├── requirements-dev.txt      # pytest, httpx, black, pip-audit
+│   ├── .env.example              # modelo das variáveis de ambiente
+│   └── .python-version           # Python 3.12 (mesmo do CI e do Render)
+├── dfd/                          # Modelagem de ameaças
+│   ├── dfd.md                    # DFD v3 em Mermaid, entradas, saídas e trust boundaries
+│   ├── dfd-v3-requisicao.png     # DFD: fluxo de uma requisição
+│   ├── dfd-v3-cicd.png           # DFD: cadeia de entrega
+│   ├── analise-cia.md            # tríade CIA em 10 componentes
+│   ├── threat-model-stride.md    # ameaças STRIDE, controles e riscos aceitos
+│   ├── gerar_imagens.py          # gera os PNGs a partir do dfd.md
+│   └── historico/                # versões anteriores do DFD
+├── eda/                          # Dados/IA
+│   ├── eda_edubot_tp1.ipynb      # EDA do TP1
+│   ├── eda_edubot_tp2.ipynb      # EDA do TP2: correlações e teste de hipótese
+│   ├── escolha-do-dataset.md     # fonte, licença e justificativa do dataset
+│   ├── relatorio_eda_tp2.md      # relatório de EDA do TP2
+│   ├── guia_rotulacao.md         # guia de rotulação da amostra acadêmica
+│   ├── preparar_amostra_academica.py
+│   ├── data/                     # dataset bruto, licença e dataset tratado
+│   └── figures/                  # figuras exportadas pelos notebooks
+├── security/                     # Segurança (Infra/Sec)
+│   ├── auditoria-final-tp3.md    # achados, checklist OWASP API Top 10 e prontidão para o pentest
+│   ├── decisoes-tecnicas.md      # decisões técnicas do TP2 e do TP3
+│   ├── deploy-render.md          # configuração do deploy no Render
+│   ├── zap-findings.md           # findings do ZAP (TP2)
+│   ├── zap-report-*.html         # relatórios exportados do OWASP ZAP
+│   └── evidencias/               # saídas do pytest e do pip-audit
+├── entregas/                     # Relatórios de cada TP (Markdown, script e PDF)
+│   ├── TP2/
+│   └── TP3/                      # inclui prints/ com as evidências
+└── README.md
 ```
 
 ## API (Infra/Sec)
 
-### O que foi implementado
+### Rotas
 
-- Estrutura modular em `api/app/`: `routers/` (rotas), `models/` (schemas Pydantic e tabelas SQLModel), `core/` (configuração, segurança, persistência), `db/` (seed de usuários de teste).
-- Autenticação **JWT** com `OAuth2PasswordBearer` (`python-jose` para o token, `passlib`/`bcrypt` para hashing de senha).
-- **Persistência real com SQLModel + SQLite**, substituindo o armazenamento em memória do TP1.
-- **Controles OWASP Top 10:**
-  - `extra='forbid'` em todos os modelos de entrada (rejeita campos inesperados no corpo da requisição).
-  - Queries parametrizadas via SQLModel (sem SQL raw).
-  - Verificação de **ownership (BOLA)** em `GET /solicitacoes/{id}`, retorna 404 tanto para ID inexistente quanto para recurso de outro usuário.
-  - Headers de segurança (HSTS, X-Frame-Options, X-Content-Type-Options, Content-Security-Policy) via middleware.
-  - CORS com allowlist explícita de origens.
-  - Rate limiting (5/minuto) em `POST /auth/token`, contra força bruta.
-- 4 rotas:
-  - `GET /health` - pública.
-  - `POST /auth/token` - login, retorna JWT (rate limitado).
-  - `POST /predict` - protegida, persiste uma `Solicitação` vinculada ao usuário autenticado.
-  - `GET /solicitacoes/{id}` - protegida, com verificação de ownership.
+| Rota | Autenticação | O que faz |
+| --- | --- | --- |
+| `GET /health` | Pública | Verifica se a API está no ar |
+| `POST /auth/token` | Pública (5 por minuto por IP) | Login (usuário e senha em formulário). Retorna um JWT válido por 30 minutos |
+| `POST /predict` | JWT (20 por minuto por IP) | Recebe a mensagem do aluno e cria uma `Solicitacao` ligada a ele. Categoria e urgência retornam `placeholder` até o TP4 |
+| `GET /solicitacoes/{id}` | JWT | Retorna uma solicitação, **somente se for do aluno autenticado** (senão, 404) |
+| `GET /docs`, `/redoc`, `/openapi.json` | Pública | Documentação OpenAPI, com todas as respostas possíveis de cada rota |
+
+### Controles de segurança
+
+| Controle | Implementação |
+| --- | --- |
+| Autenticação | JWT HS256 (`PyJWT`) com `OAuth2PasswordBearer`. Chave obrigatória com no mínimo 32 caracteres, algoritmo fixo, `exp` e `sub` obrigatórios. Senhas com `bcrypt` |
+| Autorização (BOLA) | Ownership em `GET /solicitacoes/{id}`: 404 tanto para ID inexistente quanto para recurso de outro aluno |
+| Validação de entrada | Pydantic com `extra="forbid"` (campo extra → 422), mensagem de 1 a 2000 caracteres, ID inteiro maior ou igual a 1. O 422 não repete o valor enviado |
+| Banco de dados | SQLModel + SQLite, só com queries parametrizadas (sem SQL raw) |
+| Rate limiting | Login: 5 por minuto. `/predict`: 20 por minuto. Por IP real do cliente (`cf-connecting-ip` atrás do proxy do Render). 429 com `Retry-After` |
+| Headers HTTP | HSTS, X-Frame-Options, X-Content-Type-Options e Content-Security-Policy em todas as respostas. Sem o header `Server: uvicorn` |
+| CORS | Allowlist explícita de origens, métodos e headers |
+| Anti-enumeração | Mesma resposta e mesmo tempo para senha errada e usuário inexistente |
+| Logs | Login com falha registra usuário e IP (nunca a senha) |
+| Dependências | `pip-audit` sem vulnerabilidades conhecidas, verificado no CI |
+| Segredos | Só em variáveis de ambiente. `.env` no `.gitignore` |
+
+#### Rate limiting: limites e justificativa
+
+- **`POST /auth/token`: 5 tentativas por minuto por IP.** Permite que um usuário erre a senha algumas vezes sem ser bloqueado logo de cara, mas reduz a força bruta de milhares de tentativas por minuto para 5.
+- **`POST /predict`: 20 requisições por minuto por IP.** Bem acima do uso de um aluno digitando, mas impede automação em massa, o que será importante quando cada chamada acionar um modelo de linguagem (TP4).
+- **IP real atrás do proxy:** no Render, a API fica atrás da Cloudflare e de balanceadores. O IP é lido do `cf-connecting-ip`, que o cliente não consegue falsificar.
+
+Detalhes e histórico em [`security/decisoes-tecnicas.md`](security/decisoes-tecnicas.md).
 
 ### Estrutura do código
 
 ```
 api/
 ├── app/
-│   ├── main.py                     # cria o app, registra middlewares e rotas
+│   ├── main.py                  # cria o app, registra middlewares, handlers de erro e rotas
 │   ├── core/
-│   │   ├── config.py                # settings (variáveis de ambiente)
-│   │   ├── hashing.py               # hashing de senha (bcrypt)
-│   │   ├── security.py              # JWT, autenticação, dependency de auth
-│   │   ├── security_headers.py      # middleware de headers HTTP
-│   │   ├── database.py              # engine e sessão do SQLModel
-│   │   └── rate_limit.py            # limiter compartilhado (slowapi)
+│   │   ├── config.py            # configurações lidas do ambiente (.env)
+│   │   ├── hashing.py           # hash e verificação de senha (bcrypt)
+│   │   ├── security.py          # JWT, autenticação, dependency de usuário atual
+│   │   ├── security_headers.py  # middleware de headers HTTP
+│   │   ├── rate_limit.py        # rate limiter, IP real do cliente e resposta 429
+│   │   ├── docs.py              # textos e respostas de erro da documentação OpenAPI
+│   │   └── database.py          # engine e sessão do SQLModel
 │   ├── models/
-│   │   ├── schemas.py                # schemas de entrada/saída (Pydantic)
-│   │   └── db_models.py              # tabelas SQLModel (User, Solicitacao)
-│   ├── routers/
-│   │   ├── health.py
-│   │   ├── auth.py
-│   │   ├── predict.py
-│   │   └── solicitacoes.py
+│   │   ├── schemas.py           # schemas de entrada e saída (Pydantic)
+│   │   └── db_models.py         # tabelas SQLModel (User, Solicitacao)
+│   ├── routers/                 # health, auth, predict, solicitacoes
 │   └── db/
-│       └── seed.py                   # usuários de teste
-├── tests/
-│   ├── conftest.py                   # fixtures (sessão de teste, client)
-│   └── test_security.py              # 4 casos de segurança
-├── requirements.txt
-├── requirements-dev.txt              # black, pytest, httpx
-├── pyproject.toml                    # configuração do Black
-└── .env.example
+│       └── seed.py              # usuários e solicitações de teste
+└── tests/
+    ├── conftest.py              # fixtures (banco em memória, client, login)
+    ├── test_autenticacao.py     # 12 testes: tokens forjados, expirados, alg none...
+    ├── test_bola.py             # 5 testes: ownership e enumeração de IDs
+    ├── test_validacao_entrada.py # 16 testes: campos extras, tamanhos, SQL injection
+    ├── test_rate_limit.py       # 13 testes: 429, IP falso, IP real atrás de proxy
+    ├── test_headers_cors.py     # 10 testes: headers em todas as respostas e CORS
+    └── test_documentacao.py     # 8 testes: todas as rotas documentadas
 ```
 
 ### Como instalar (Windows / PowerShell)
+
+Pré-requisito: Python 3.12 ou superior.
 
 ```powershell
 cd api
@@ -96,8 +162,15 @@ pip install -r requirements-dev.txt
 
 # 3. Criar o arquivo de variáveis de ambiente
 Copy-Item .env.example .env
-# edite o .env e defina uma SECRET_KEY própria
 ```
+
+Depois, abra o `.env` e preencha:
+
+- **`SECRET_KEY` (obrigatória):** a API não inicia sem ela. Gere uma com:
+  ```powershell
+  python -c "import secrets; print(secrets.token_urlsafe(48))"
+  ```
+- **`SEED_PASSWORD_ALUNO1`, `SEED_PASSWORD_ALUNO2`, `SEED_PASSWORD_ALUNO3`:** senhas dos usuários de teste `aluno.teste`, `aluno.teste2` e `aluno.teste3`, que você escolhe. Um usuário sem senha definida não é criado.
 
 ### Como rodar
 
@@ -105,7 +178,7 @@ Copy-Item .env.example .env
 uvicorn app.main:app --reload --no-server-header
 ```
 
-A API sobe em `http://127.0.0.1:8000`. Documentação Swagger em `http://127.0.0.1:8000/docs`.
+A API sobe em `http://127.0.0.1:8000`, com a documentação em `http://127.0.0.1:8000/docs`. Na inicialização, ela cria o banco `edubot.db` e os usuários de teste com algumas solicitações cada.
 
 ### Como rodar os testes
 
@@ -113,49 +186,71 @@ A API sobe em `http://127.0.0.1:8000`. Documentação Swagger em `http://127.0.0
 python -m pytest tests/ -v
 ```
 
-4 testes cobrindo: acesso sem token, acesso a recurso de outro usuário (BOLA), campo extra no corpo da requisição, e um fluxo válido completo.
+São 64 testes de segurança, cobrindo autenticação, BOLA, validação de entrada, rate limiting, headers, CORS e documentação. Os testes usam um banco em memória e uma chave própria, então não precisam do `.env`.
+
+Para conferir as dependências:
+
+```powershell
+pip-audit -r requirements.txt
+```
 
 ### Testando as rotas manualmente
 
+O jeito mais simples é pelo Swagger (`/docs`): clique em **Authorize**, informe usuário e senha, e use **Try it out** em cada rota.
+
+Pelo PowerShell (troque `$API` pela URL local ou pela URL publicada, e use a senha definida no `.env`):
+
 ```powershell
+$API = "http://127.0.0.1:8000"
+
 # 1. Health check (sem autenticação) - esperado: 200
-curl.exe http://127.0.0.1:8000/health
+Invoke-RestMethod "$API/health"
 
-# 2. Login (usuário de teste: aluno.teste / senha123)
-curl.exe -X POST http://127.0.0.1:8000/auth/token -d "username=aluno.teste password=senha123"
+# 2. Login - retorna o token
+$login = Invoke-RestMethod -Method Post -Uri "$API/auth/token" -Body @{ username = "aluno.teste"; password = "SENHA_DO_ALUNO1" }
+$headers = @{ Authorization = "Bearer $($login.access_token)" }
 
-# 3. Predict com token - cria e retorna uma Solicitação com id
-$TOKEN = "cole_aqui_o_access_token_recebido"
-curl.exe -X POST http://127.0.0.1:8000/predict -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"mensagem": "Preciso trancar uma disciplina"}'
+# 3. Predict com token - cria e retorna uma Solicitacao com id
+Invoke-RestMethod -Method Post -Uri "$API/predict" -Headers $headers -ContentType "application/json" -Body '{"mensagem": "Preciso trancar Calculo II"}'
 
-# 4. Consultar a solicitação pelo id retornado acima
-curl.exe http://127.0.0.1:8000/solicitacoes/1 -H "Authorization: Bearer $TOKEN"
+# 4. Consultar uma solicitação do próprio aluno (as de id 1 e 2 são do aluno.teste)
+Invoke-RestMethod "$API/solicitacoes/1" -Headers $headers
 ```
-
-Também é possível testar pela interface do Swagger em `/docs`, usando o botão **Authorize** após obter o token em `/auth/token`.
 
 ### Formatação automática
 
-O projeto usa [Black](https://black.readthedocs.io/) para formatação automática do código Python, com indentação de 4 espaços.
+O projeto usa [Black](https://black.readthedocs.io/) para formatação do código Python:
 
 ```powershell
-python -m black app/
+python -m black app/ tests/
 ```
 
-### Observações importantes
+### Integração contínua (GitHub Actions)
 
-- A base de usuários em `app/db/seed.py` cria usuários de teste fixos (`aluno.teste` / `senha123`) apenas para validar os fluxos de autenticação e ownership.
-- `SECRET_KEY` no `.env.example` é só um placeholder de desenvolvimento, nunca deve ser usada como está, nem versionada.
+O workflow [`.github/workflows/security-tests.yml`](.github/workflows/security-tests.yml) roda a cada push e em todo pull request para a `main`:
 
-## DFD e Análise CIA
+1. **Testes de segurança (pytest):** os 64 testes, com uma chave gerada só para a execução.
+2. **Auditoria de dependências (pip-audit):** falha se alguma dependência tiver vulnerabilidade conhecida.
 
-O diagrama de fluxo de dados (DFD) modela as interações entre o Aluno/Cliente, os três endpoints da API (`GET /health`, `POST /auth/token`, `POST /predict`) e o armazenamento de credenciais (`fake_db.py`), identificando duas trust boundaries, entre o Aluno e o servidor da API, e entre a aplicação e o armazenamento de credenciais.
+A `main` é protegida por um ruleset: só recebe código por pull request, e com os dois checks aprovados. Se um teste de segurança falhar, o merge fica bloqueado.
 
-- **[`dfd/dfd.md`](dfd/dfd.md)** -> diagrama em Mermaid, com a lista de entradas, saídas e trust boundaries identificados.
-- **`dfd/dfd.png`** -> imagem exportada do diagrama, gerada a partir do `dfd.md`.
-- **[`dfd/analise-cia.md`](dfd/analise-cia.md)** -> análise da tríade CIA (confidencialidade, integridade, disponibilidade) aplicada aos 4 componentes do diagrama.
+### Deploy (Render)
 
-![DFD do EduBot Analytics](dfd/dfd.png)
+A API está publicada em https://edubot-analytics.onrender.com, como Web Service no plano gratuito do Render. A configuração completa (comandos, variáveis de ambiente e limitações) está em [`security/deploy-render.md`](security/deploy-render.md). Resumo:
+
+- HTTPS com redirecionamento de HTTP, terminado pela Cloudflare/Render.
+- `SECRET_KEY` gerada pelo Render, e senhas de teste só nas variáveis de ambiente do painel.
+- Deploy automático **somente depois que o GitHub Actions aprova** os testes e o `pip-audit`.
+
+## Modelagem de ameaças: DFD, CIA e STRIDE
+
+- **[`dfd/dfd.md`](dfd/dfd.md):** DFD versão 3, em dois diagramas: o fluxo de uma requisição (aluno → Cloudflare/Render → API → dados) e a cadeia de entrega (GitHub → Actions → Render). Inclui entradas, saídas e quatro trust boundaries.
+- **[`dfd/analise-cia.md`](dfd/analise-cia.md):** tríade CIA aplicada a 10 componentes.
+- **[`dfd/threat-model-stride.md`](dfd/threat-model-stride.md):** 31 ameaças STRIDE com controle e status. Inclui as ameaças do futuro agente (prompt injection para alterar notas ou acessar dados de outro aluno).
+
+![DFD - fluxo de uma requisição](dfd/dfd-v3-requisicao.png)
+
+![DFD - cadeia de entrega](dfd/dfd-v3-cicd.png)
 
 Resumo da análise CIA (detalhamento completo em `dfd/analise-cia.md`):
 
@@ -165,37 +260,48 @@ Resumo da análise CIA (detalhamento completo em `dfd/analise-cia.md`):
 | `POST /auth/token` | Alta | Alta | Alta |
 | `POST /predict` | Alta | Alta | Média |
 | `GET /solicitacoes/{id}` | Alta | Alta | Média |
-| Banco de dados | Altíssima | Alta | Média |
+| Banco de dados (SQLite) | Altíssima | Alta | Baixa |
+| Borda (Cloudflare + Render) | Alta | Alta | Média |
+| Documentação (`/docs`) | Baixa | Média | Baixa |
+| Variáveis de ambiente (segredos) | Altíssima | Alta | Alta |
+| Logs de segurança | Média | Média | Baixa |
+| Cadeia de entrega (CI/CD) | Média | Altíssima | Média |
 
 ## EDA (Análise Exploratória de Dados)
 
-Usamos o dataset **Bitext - Customer Service Tagged Training Dataset** (Bitext Innovations, 2024, licença CDLA-Sharing-1.0): 26.872 registros em inglês, com texto livre (`instruction`) e rótulo em duas camadas (`category` → `intent`). A justificativa completa, licença e alternativas descartadas estão em `[eda/escolha-do-dataset.md](eda/escolha-do-dataset.md)`.
+Usamos o dataset **Bitext - Customer Service Tagged Training Dataset** (Bitext Innovations, 2024, licença CDLA-Sharing-1.0): 26.872 registros em inglês, com texto livre (`instruction`) e rótulo em duas camadas (`category` → `intent`). A justificativa completa, licença e alternativas descartadas estão em [`eda/escolha-do-dataset.md`](eda/escolha-do-dataset.md).
 
-A análise está no notebook `[eda/eda_edubot_tp1.ipynb](eda/eda_edubot_tp1.ipynb)`. Em resumo:
+### TP1
+
+A análise está no notebook [`eda/eda_edubot_tp1.ipynb`](eda/eda_edubot_tp1.ipynb). Em resumo:
 
 - **Saída:** 26.872 → **21.006 registros × 17 colunas** (78,2% retidos), em `eda/data/edubot_dataset_tratado.csv`
 - **Limpeza:** removi duplicatas do par (`instruction`, `intent`) (−2.237), descartei 4 intenções logísticas sem equivalente acadêmico (−3.629) e remapeei as 23 restantes para o vocabulário do EduBot
 - **Categorias finais:** FINANCEIRO (30,7%), ACADEMICO (28,6%), SUPORTE (14,3%), CADASTRO (12,2%), FEEDBACK (9,5%), ACESSO (4,7%)
-- **Figuras:** 6 gráficos em `[eda/figures/](eda/figures/)`
+- **Figuras:** 6 gráficos em [`eda/figures/`](eda/figures/) (`fig1` a `fig6`)
 
+#### Hipóteses (detalhes na seção 7 do notebook do TP1)
 
+| Hipótese | Resultado | O que isso muda |
+| --- | --- | --- |
+| H1 — pedidos com justificativa são mais longos | Parcial no TP1. No TP2, confirmada estatisticamente com efeito pequeno (Mann-Whitney, p = 1,05e-51, Cliff's delta = 0,18) | `n_palavras` pode ser feature auxiliar, mas o sinal principal continua sendo o texto |
+| H2 — hostilidade indica o tipo de pedido | Refutada | `urgencia_proxy` não serve. Urgência passou a ser avaliada por prazo e impacto acadêmico |
+| H3 — ~49% das mensagens têm typo, gíria ou abreviação | Confirmada | Filtro por palavra-chave não segura; defesa precisa ser semântica |
+| H4 — ~17% dos pedidos são de cadastro ou acesso | Confirmada | Reforça a necessidade de checar o dono do recurso (BOLA), implementada no TP2 |
 
-### Hipóteses (detalhes na seção 7 do notebook)
+### TP2
 
+O notebook [`eda/eda_edubot_tp2.ipynb`](eda/eda_edubot_tp2.ipynb) aprofunda a análise com heatmap de correlação de Spearman, scatter plots (`fig7` a `fig9`), o teste formal da H1 e a comparação entre o Bitext e uma amostra de 300 perguntas acadêmicas em português (`liteofspace/unb-chatbot-dpo`). O relatório estruturado está em [`eda/relatorio_eda_tp2.md`](eda/relatorio_eda_tp2.md).
 
-| Hipótese                                              | Resultado  | O que isso muda                                                                      |
-| ----------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------ |
-| H1 — pedidos com justificativa são mais longos        | Parcial    | `n_palavras` pode ser feature auxiliar, mas o sinal principal continua sendo o texto |
-| H2 — hostilidade indica o tipo de pedido              | Refutada   | `urgencia_proxy` não serve; no TP2 precisamos de rótulo de urgência de verdade       |
-| H3 — ~49% das mensagens têm typo, gíria ou abreviação | Confirmada | Filtro por palavra-chave não segura; defesa precisa ser semântica                    |
-| H4 — ~17% dos pedidos são de cadastro ou acesso       | Confirmada | Reforça a necessidade de checar dono do recurso (IDOR) no TP2                        |
+A fonte acadêmica não declara licença, por isso os textos não são versionados: o script `eda/preparar_amostra_academica.py` baixa os dados para `eda/data/cache/`, que **precisa existir antes de rodar o notebook do TP2**.
 
+### TP3
 
-
+_Em andamento (Aluno A - Dados/IA): regressão linear, pergunta de classificação e planejamento do modelo._
 
 ### Limitações
 
-Dataset sintético, em inglês, com vocabulário de e-commerce (adaptamos os rótulos, não as frases). Sem rótulo de urgência utilizável. As hipóteses ainda são observacionais — teste estatístico fica pro TP2.
+Dataset sintético, em inglês, com vocabulário de e-commerce (adaptamos os rótulos, não as frases). A amostra acadêmica é mais próxima do domínio, mas tem só 300 mensagens e os rótulos ainda precisam de revisão humana.
 
 ### Como rodar
 
@@ -204,14 +310,16 @@ cd eda
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-jupyter notebook eda_edubot_tp1.ipynb
+
+# Necessário só para o notebook do TP2: baixa a amostra acadêmica para data/cache/
+python preparar_amostra_academica.py
+
+jupyter notebook
 ```
 
-O notebook roda de ponta a ponta com os dados já em `eda/data/`.
+O notebook do TP1 roda de ponta a ponta com os dados já em `eda/data/`.
 
 ---
-
-
 
 ## Uso de IA neste trabalho
 
@@ -221,4 +329,5 @@ Conforme a política de Sinal Verde do enunciado:
 - Escolha do dataset, mapeamento de domínio, limpeza e hipóteses foram decisões minhas - revisei tudo antes de entregar.
 - Os números citados aqui e no notebook vêm da execução do código sobre `eda/data/`; dá pra reproduzir rodando o notebook.
 - Usei o **Claude** como ferramenta auxiliar na escrita do código da API, no entendimento do funcionamento dos componentes e na identificação e correção de bugs.
+- No TP3, usei o **Claude** como apoio na auditoria de segurança, na escrita dos testes, na configuração do CI e do deploy e na revisão da documentação.
 - As decisões de implementação, a revisão do código e a validação das soluções foram realizadas por mim.
