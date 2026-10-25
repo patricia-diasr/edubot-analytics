@@ -1,5 +1,8 @@
 # Relatório de EDA do TP2
 
+Este é o relatório estruturado da análise do TP2. O código, as saídas executadas
+e os gráficos estão em `eda_edubot_tp2.ipynb`.
+
 ## Problema
 
 A ideia do EduBot é identificar a categoria e a urgência de pedidos acadêmicos. No TP1, usei o Bitext para montar o pipeline, mas o dataset tem frases sintéticas em inglês e voltadas para e-commerce. Os rótulos foram adaptados, mas os textos continuaram iguais. Como o professor apontou, isso deixa a análise distante de situações como matrícula, trancamento e consulta de notas.
@@ -57,7 +60,7 @@ Escolhi o Mann-Whitney bicaudal porque `n_palavras` é uma variável discreta, c
 - p-valor = 1,054 × 10⁻⁵¹;
 - Cliff's delta = 0,183.
 
-Com esse p-valor, rejeito a hipótese de que os dois grupos tenham a mesma distribuição. Mesmo assim, o efeito é pequeno. Então o resultado apoia a H1 dentro do Bitext, mas a diferença de apenas uma palavra na mediana tem pouca utilidade prática para classificação. O conteúdo da mensagem continua sendo bem mais importante.
+Com esse p-valor, rejeito a hipótese de que os dois grupos tenham a mesma distribuição. Mesmo assim, o efeito é pequeno segundo os limiares de Romano et al. (2006): desprezível para |δ| < 0,147, pequeno abaixo de 0,330, médio abaixo de 0,474 e grande a partir de 0,474. Então o resultado apoia a H1 dentro do Bitext, mas a diferença de apenas uma palavra na mediana tem pouca utilidade prática para classificação. O conteúdo da mensagem continua sendo bem mais importante.
 
 ## Insights principais
 
@@ -81,6 +84,33 @@ Com esse p-valor, rejeito a hipótese de que os dois grupos tenham a mesma distr
 3. Procurar logs acadêmicos anonimizados e com licença clara.
 4. Treinar um baseline de categoria só depois de separar treino, validação e teste por fonte.
 5. Tratar urgência como uma tarefa separada e manter `indeterminada` quando a mensagem não trouxer informação de prazo ou impacto.
+
+## Reprodução e artefatos
+
+Na pasta `eda`, execute:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python preparar_amostra_academica.py
+jupyter notebook eda_edubot_tp2.ipynb
+```
+
+O script de preparação baixa a amostra acadêmica para `data/cache/`, diretório
+ignorado pelo Git por causa da licença não declarada. O notebook versionado já
+contém as saídas da execução. As figuras reproduzidas são:
+
+- `figures/fig7_heatmap_correlacao.png`;
+- `figures/fig8_scatter_comprimento.png`;
+- `figures/fig9_scatter_ruido.png`.
+
+## Referência metodológica
+
+Romano, J.; Kromrey, J. D.; Coraggio, J.; Skowronek, J. (2006).
+*Appropriate statistics for ordinal level data: Should we really be using
+t-test and Cohen's d for evaluating group differences on the NSSE and other
+surveys?*
 
 ## Uso de IA
 
