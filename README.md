@@ -36,7 +36,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | --- | --- | --- | --- |
 | **TP1** | Escolha do dataset, limpeza e EDA inicial | API FastAPI com JWT, DFD e análise CIA | `eda/eda_edubot_tp1.ipynb`, `eda/escolha-do-dataset.md`, `api/`, `dfd/` |
 | **TP2** | Correlações, teste de hipótese e relatório de EDA | Controles OWASP Top 10, rate limiting, testes pytest e scan OWASP ZAP | `eda/eda_edubot_tp2.ipynb`, `eda/relatorio_eda_tp2.md`, `security/`, `entregas/TP2/` |
-| **TP3** | Regressão linear e pergunta de classificação _(em andamento)_ | Auditoria final, 67 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `security/auditoria-final-tp3.md`, `.github/workflows/`, `dfd/`, `entregas/TP3/` |
+| **TP3** | Regressão linear múltipla, pergunta de classificação e planejamento do T2 | Auditoria final, 67 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `eda/eda_edubot_tp3.ipynb`, `eda/pergunta_classificacao_tp3.md`, `eda/planejamento_t2.md`, `security/auditoria-final-tp3.md`, `entregas/TP3/` |
 
 ## Estrutura do repositório
 
@@ -61,8 +61,11 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 ├── eda/                          # Dados/IA
 │   ├── eda_edubot_tp1.ipynb      # EDA do TP1
 │   ├── eda_edubot_tp2.ipynb      # EDA do TP2: correlações e teste de hipótese
+│   ├── eda_edubot_tp3.ipynb      # regressão linear múltipla e análise de resíduos
 │   ├── escolha-do-dataset.md     # fonte, licença e justificativa do dataset
 │   ├── relatorio_eda_tp2.md      # relatório de EDA do TP2
+│   ├── pergunta_classificacao_tp3.md
+│   ├── planejamento_t2.md
 │   ├── guia_rotulacao.md         # guia de rotulação da amostra acadêmica
 │   ├── preparar_amostra_academica.py
 │   ├── data/                     # dataset bruto, licença e dataset tratado
@@ -300,7 +303,19 @@ A fonte acadêmica não declara licença, por isso os textos não são versionad
 
 ### TP3
 
-_Em andamento (Aluno A - Dados/IA): regressão linear, pergunta de classificação e planejamento do modelo._
+O notebook executado [`eda/eda_edubot_tp3.ipynb`](eda/eda_edubot_tp3.ipynb) usa regressão linear múltipla para prever `n_chars`. O pipeline combina `n_palavras`, flags linguísticas e a categoria codificada com one-hot encoding.
+
+- **Treino/teste:** 16.804 e 4.202 registros;
+- **R² no teste:** 0,690;
+- **RMSE:** 6,243 caracteres;
+- **Diagnóstico:** residual plot e Q-Q plot em `fig10` e `fig11`;
+- **Transição para classificação:** distribuição das 23 intenções em `fig12`.
+
+O R² não significa que o modelo entendeu o texto. A relação entre palavras e caracteres é parcialmente mecânica, e os resíduos não atendem perfeitamente às hipóteses de variância constante e normalidade.
+
+A pergunta de classificação está em [`eda/pergunta_classificacao_tp3.md`](eda/pergunta_classificacao_tp3.md). O plano do T2 está em [`eda/planejamento_t2.md`](eda/planejamento_t2.md), com baseline TF-IDF + regressão logística e comparação futura com SVM linear.
+
+O colega adversário e a URL da API alvo ficaram em aberto porque o professor informou que fará o pareamento depois das entregas.
 
 ### Limitações
 
@@ -320,7 +335,7 @@ python preparar_amostra_academica.py
 jupyter notebook
 ```
 
-O notebook do TP1 roda de ponta a ponta com os dados já em `eda/data/`.
+Os notebooks do TP1 e do TP3 rodam de ponta a ponta com os dados já em `eda/data/`. O TP2 também precisa do cache criado por `preparar_amostra_academica.py`.
 
 ---
 
@@ -333,4 +348,5 @@ Conforme a política de Sinal Verde do enunciado:
 - Os números citados aqui e no notebook vêm da execução do código sobre `eda/data/`; dá pra reproduzir rodando o notebook.
 - Usei o **Claude** como ferramenta auxiliar na escrita do código da API, no entendimento do funcionamento dos componentes e na identificação e correção de bugs.
 - No TP3, usei o **Claude** como apoio na auditoria de segurança, na escrita dos testes, na configuração do CI e do deploy e na revisão da documentação.
+- No TP3, usei o **Cursor** como apoio para estruturar o notebook de regressão, organizar o pipeline e revisar os documentos de transição para classificação.
 - As decisões de implementação, a revisão do código e a validação das soluções foram realizadas por mim.

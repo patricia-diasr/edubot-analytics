@@ -28,7 +28,7 @@ O **EduBot Analytics** é um agente de IA de suporte acadêmico universitário. 
 | Desafio de IA | Classificar a urgência do pedido e a sua categoria (burocrático ou pedagógico) |
 | Desafio de segurança | Evitar que alunos manipulem o agente para alterar notas ou acessar registros de outros estudantes |
 
-O TP3 consolida a API construída nos TPs anteriores e prepara a transição para a fase preditiva. Nesta entrega, a API passou por uma auditoria final de segurança, ganhou uma suíte de testes integrada ao GitHub Actions, uma documentação OpenAPI completa e foi publicada em ambiente online, pronta para ser alvo do pentest do TP4. Os documentos de modelagem de ameaças dos TPs anteriores foram atualizados para refletir o estado atual do sistema.
+O TP3 consolida a análise estatística e a API construída nos TPs anteriores. Na frente de Dados/IA, foi criada uma regressão linear múltipla, analisados os resíduos e formalizada a futura tarefa de classificação. Na frente de Infra/Sec, a API passou por uma auditoria final de segurança, ganhou uma suíte de testes integrada ao GitHub Actions, uma documentação OpenAPI completa e foi publicada em ambiente online, pronta para ser alvo do pentest do TP4.
 
 ## 1.1 Organização do repositório
 
@@ -43,7 +43,95 @@ O TP3 consolida a API construída nos TPs anteriores e prepara a transição par
 
 As instruções de instalação, execução e testes estão no `README.md`, na raiz do repositório.
 
-# 2. Suíte de testes de segurança
+<!-- pagebreak -->
+
+# 2. Regressão linear e transição para classificação
+
+## 2.1 Regressão linear múltipla
+
+O notebook `eda/eda_edubot_tp3.ipynb` usa regressão linear múltipla para prever `n_chars`, o número de caracteres de uma mensagem. As variáveis explicativas são `n_palavras`, as flags linguísticas do Bitext e `categoria_edubot`, transformada com one-hot encoding.
+
+O pré-processamento e o `LinearRegression` ficam no mesmo pipeline do scikit-learn. Os dados foram separados em 80% para treino e 20% para teste, com `random_state=42`.
+
+| Medida | Resultado |
+| --- | ---: |
+| Registros de treino | 16.804 |
+| Registros de teste | 4.202 |
+| R² no teste | 0,690 |
+| RMSE | 6,243 caracteres |
+| Média dos resíduos | 0,097 |
+
+O modelo explica cerca de 69% da variação no número de caracteres. Isso acontece principalmente porque mensagens com mais palavras tendem a ter mais caracteres. O resultado não significa que o modelo entendeu o conteúdo.
+
+![Figura 1 - Resíduos da regressão linear](../../eda/figures/fig10_residuos_regressao.png)
+
+Os resíduos ficam em torno de zero, mas a dispersão não é perfeitamente uniforme. As faixas diagonais aparecem porque caracteres e palavras são contagens inteiras. A hipótese de variância constante não é plenamente atendida.
+
+![Figura 2 - Q-Q plot dos resíduos](../../eda/figures/fig11_qqplot_residuos.png)
+
+O centro do Q-Q plot fica razoavelmente perto da reta, mas as caudas se afastam. Os resíduos não são perfeitamente normais.
+
+## 2.2 Limitações da regressão
+
+- O alvo `n_chars` foi escolhido para praticar regressão e não representa a intenção da pessoa.
+- A relação entre palavras e caracteres é parcialmente mecânica.
+- Os resíduos apresentam desvios de homocedasticidade e normalidade.
+- O Bitext é sintético, em inglês e voltado a e-commerce.
+- Intenções são classes sem ordem numérica. A regressão linear pode devolver valores contínuos sem significado e não resolve a tarefa final.
+
+## 2.3 Pergunta de classificação
+
+A pergunta formalizada para o T2 é:
+
+> Dado o texto de uma mensagem de atendimento, qual é a intenção do usuário?
+
+A entrada será `instruction` e a saída será uma das 23 classes de `intent_edubot`. O dataset tratado tem 21.006 mensagens. A maior parte das classes tem entre 700 e 1.000 exemplos. `disciplina_trancar` é a menor, com 493.
+
+![Figura 3 - Distribuição das 23 intenções](../../eda/figures/fig12_distribuicao_intencoes_tp3.png)
+
+| Intenção | Mensagens | Percentual |
+| --- | ---: | ---: |
+| `acesso_recuperar_senha` | 995 | 4,74% |
+| `cadastro_atualizar_dados` | 777 | 3,70% |
+| `cadastro_cancelar_vinculo` | 918 | 4,37% |
+| `cadastro_trocar_vinculo` | 862 | 4,10% |
+| `disciplina_alterar` | 870 | 4,14% |
+| `disciplina_inscrever` | 998 | 4,75% |
+| `disciplina_trancar` | 493 | 2,35% |
+| `feedback_avaliacao` | 997 | 4,75% |
+| `feedback_reclamacao` | 1.000 | 4,76% |
+| `financeiro_acompanhar_reembolso` | 707 | 3,37% |
+| `financeiro_consultar_boleto` | 921 | 4,38% |
+| `financeiro_emitir_boleto` | 909 | 4,33% |
+| `financeiro_formas_pagamento` | 999 | 4,76% |
+| `financeiro_politica_reembolso` | 997 | 4,75% |
+| `financeiro_problema_pagamento` | 999 | 4,76% |
+| `financeiro_solicitar_reembolso` | 918 | 4,37% |
+| `matricula_problema` | 999 | 4,76% |
+| `matricula_solicitar` | 892 | 4,25% |
+| `solicitacao_consultar_status` | 807 | 3,84% |
+| `suporte_atendente_humano` | 999 | 4,76% |
+| `suporte_comunicados` | 999 | 4,76% |
+| `suporte_contato_secretaria` | 1.000 | 4,76% |
+| `trancamento_consultar_regra` | 950 | 4,52% |
+
+As classes, descrições, quantidades, ambiguidades e limitações estão em `eda/pergunta_classificacao_tp3.md`.
+
+## 2.4 Planejamento do T2
+
+O baseline será TF-IDF com regressão logística. Depois, o mesmo conjunto de dados será usado para comparar `LinearSVC`. A avaliação terá Macro-F1 como métrica principal, além de precision, recall, acurácia e matriz de confusão.
+
+O pipeline será treinado fora da API, salvo com uma versão e carregado uma vez na inicialização do FastAPI. O planejamento completo está em `eda/planejamento_t2.md`.
+
+| Item do pentest | Situação |
+| --- | --- |
+| Colega ou equipe adversária | A definir pelo professor após a entrega |
+| URL ou IP da API alvo | A definir pelo professor após a entrega |
+| Confirmação de acesso | Será registrada depois do pareamento |
+
+Na aula de 07/10/2026, o professor orientou que esses campos ficassem em aberto porque ele faria o pareamento depois das entregas. A mesma orientação foi confirmada nas aulas de 14/10/2026 e 21/10/2026.
+
+# 3. Suíte de testes de segurança
 
 A suíte de testes da API foi ampliada de 4 para **67 testes**, organizados por tema. Todos passam com `pytest tests/ -v`, localmente e no GitHub Actions.
 
@@ -68,9 +156,9 @@ tests/test_headers_cors.py::test_docs_tem_csp_propria_sem_unsafe_inline PASSED
 
 A saída completa está em `security/evidencias/pytest-tp3.txt`.
 
-**Os testes realmente detectam falhas:** para confirmar que os testes não passam "sempre", a verificação de ownership foi removida de propósito. Os 3 testes de BOLA falharam imediatamente e voltaram a passar quando o código foi restaurado. A mesma demonstração foi feita no GitHub, com um pull request (seção 3).
+**Os testes realmente detectam falhas:** para confirmar que os testes não passam "sempre", a verificação de ownership foi removida de propósito. Os 3 testes de BOLA falharam imediatamente e voltaram a passar quando o código foi restaurado. A mesma demonstração foi feita no GitHub, com um pull request (seção 4).
 
-# 3. Integração contínua com GitHub Actions
+# 4. Integração contínua com GitHub Actions
 
 O workflow `.github/workflows/security-tests.yml` roda a cada push e em todo pull request para a `main`, com dois jobs:
 
@@ -97,7 +185,7 @@ O workflow roda com permissão somente de leitura e não usa nenhum segredo real
 
 ![Print 08 - Alteração do pull request de teste: remoção da verificação de dono](prints/08-pr-diff.png)
 
-# 4. Auditoria final de segurança
+# 5. Auditoria final de segurança
 
 A auditoria completa está em `security/auditoria-final-tp3.md`. A revisão do código do TP2, a auditoria de dependências e os testes contra a API publicada encontraram oito problemas, todos corrigidos:
 
@@ -114,7 +202,7 @@ A auditoria completa está em `security/auditoria-final-tp3.md`. A revisão do c
 
 **O achado A3 só apareceu em produção.** Os testes locais passavam, mas, contra a URL pública, 7 logins errados seguidos não geravam 429. Os logs mostraram que a API enxergava o IP interno do balanceador do Render, e não o do cliente. Depois da correção, o teste online mostrou 401 nas 5 primeiras tentativas e 429 na 6ª, mesmo com `X-Forwarded-For` falso. Tentar forjar o próprio `cf-connecting-ip` é barrado pela Cloudflare (403).
 
-## 4.1 Checklist OWASP API Security Top 10
+## 5.1 Checklist OWASP API Security Top 10
 
 A auditoria traz o checklist do **OWASP API Security Top 10 (2023)**, com status e evidência de cada item, e os riscos aceitos com justificativa:
 
@@ -131,7 +219,7 @@ A auditoria traz o checklist do **OWASP API Security Top 10 (2023)**, com status
 | API9 Improper Inventory Management | Resolvido |
 | API10 Unsafe Consumption of APIs | Reavaliar no TP4 (agente com LLM) |
 
-## 4.2 Scan final com OWASP ZAP
+## 5.2 Scan final com OWASP ZAP
 
 Um novo scan passivo foi feito contra a URL pública, com tráfego autenticado gerado pelo Swagger UI. Ele encontrou dois findings Médios na página `/docs`, que foram corrigidos: a página passou a ter CSP própria sem `'unsafe-inline'`, o Swagger UI passou a ter versão fixa e SRI, e o `/redoc` foi removido. O scan de verificação confirmou o resultado.
 
@@ -150,7 +238,7 @@ Um novo scan passivo foi feito contra a URL pública, com tráfego autenticado g
 
 Os findings estão detalhados em `security/zap-findings-tp3.md`, e os relatórios em `security/zap-report-tp3-inicial.html` e `security/zap-report-tp3-verificacao.html`. **Não há nenhum finding Alto, Médio ou Baixo pendente.**
 
-# 5. Documentação OpenAPI (/docs)
+# 6. Documentação OpenAPI (/docs)
 
 A especificação OpenAPI está em [/docs](https://edubot-analytics.onrender.com/docs) e documenta todas as rotas com resumo, descrição, schemas de entrada e saída, exemplos e **todas as respostas possíveis** (200, 401, 404, 422 e 429). A página abre com um guia de autenticação e uma tabela dos controles de segurança. Um teste automatizado garante que nenhuma rota fique sem documentação.
 
@@ -160,7 +248,7 @@ A especificação OpenAPI está em [/docs](https://edubot-analytics.onrender.com
 
 ![Print 11 - POST /predict com as respostas documentadas](prints/11-docs-predict-respostas.png)
 
-# 6. Deploy e prontidão para o pentest
+# 7. Deploy e prontidão para o pentest
 
 A API está publicada no Render (plano gratuito), em [https://edubot-analytics.onrender.com](https://edubot-analytics.onrender.com). A configuração completa está em `security/deploy-render.md`:
 
@@ -175,11 +263,11 @@ A API está publicada no Render (plano gratuito), em [https://edubot-analytics.o
 | Autenticação funcionando | Atendido (print 10) |
 | Dados de teste disponíveis | 3 alunos, cada um com solicitações próprias, recriados a cada inicialização |
 | Documentação acessível | Atendido (prints 09 a 11) |
-| Nenhum finding Médio ou Alto pendente | Atendido (seção 4.2) |
+| Nenhum finding Médio ou Alto pendente | Atendido (seção 5.2) |
 
 ![Print 12 - Rate limit na API publicada: 429 com Retry-After e todos os headers de segurança](prints/12-docs-429.png)
 
-# 7. Planejamento do T2: pentest e segurança do agente
+# 8. Planejamento do T2: pentest e segurança do agente
 
 | Item | Situação |
 | --- | --- |
@@ -189,13 +277,13 @@ A API está publicada no Render (plano gratuito), em [https://edubot-analytics.o
 | Plano de escopo do pentest | Concluído (`security/plano-pentest.md`) |
 | Plano de segurança do agente | Concluído (`security/plano-pentest.md`) |
 
-## 7.1 Plano de escopo do pentest
+## 8.1 Plano de escopo do pentest
 
 **Pentest que a dupla vai realizar (TP4):** o plano define as regras de engajamento (somente a URL informada, dentro do período, com as contas de teste fornecidas; sem negação de serviço; sem ataques à plataforma de hospedagem), as etapas (reconhecimento, análise de configuração, testes de controles de acesso e de entrada, testes do agente e relatório), tendo como referência o OWASP WSTG e o OWASP API Security Top 10, e o formato de cada achado: categoria, evidência, impacto, severidade CVSS 3.1 e recomendação.
 
 **Escopo para a dupla que vai testar o EduBot:** URL, documentação e repositório; no escopo, todas as rotas e, no TP4, o agente; fora do escopo, negação de serviço, a infraestrutura do Render e da Cloudflare, as contas da dupla e engenharia social. As senhas das contas de teste não ficam no repositório e serão enviadas por e-mail à dupla adversária. Contatos para credenciais e suporte: Patricia Dias Rodrigues (patricia.rodrigues@al.infnet.edu.br) e Maitê Mota Belo de Souza Silva (maite.silva@al.infnet.edu.br).
 
-## 7.2 Plano de segurança do agente
+## 8.2 Plano de segurança do agente
 
 No TP4, o `/predict` vai usar um agente com memória e ferramentas. Para responder ao desafio de segurança do EduBot, os controles planejados são:
 
@@ -208,15 +296,15 @@ No TP4, o `/predict` vai usar um agente com memória e ferramentas. Para respond
 - **Rate limit e limite de tamanho** do `/predict` mantidos, para controlar o custo.
 - **Testes de segurança do agente** na mesma suíte do CI.
 
-# 8. Atualização da modelagem de ameaças
+# 9. Atualização da modelagem de ameaças
 
 Com a API publicada, o DFD, a análise CIA e a modelagem de ameaças dos TPs anteriores foram atualizados.
 
 **DFD versão 3** (`dfd/dfd.md`), dividido em dois diagramas e com quatro trust boundaries: (1) Internet e borda da plataforma, (2) borda e aplicação, onde só o `cf-connecting-ip` é confiável, (3) aplicação e dados (banco, segredos e logs) e (4) cadeia de entrega.
 
-![Figura 1 - DFD v3: fluxo de uma requisição](../../dfd/dfd-v3-requisicao.png)
+![Figura 4 - DFD v3: fluxo de uma requisição](../../dfd/dfd-v3-requisicao.png)
 
-![Figura 2 - DFD v3: cadeia de entrega (CI/CD)](../../dfd/dfd-v3-cicd.png)
+![Figura 5 - DFD v3: cadeia de entrega (CI/CD)](../../dfd/dfd-v3-cicd.png)
 
 | Versão do DFD | TP | Principais elementos |
 | --- | --- | --- |
@@ -253,7 +341,7 @@ A disponibilidade do banco caiu de média para baixa no TP3, porque o disco do p
 | Elevation of privilege | 1 | 0 | 2 |
 | **Total** | **22** | **4** | **6** |
 
-# 9. Uso de IA
+# 10. Uso de IA
 
 Conforme a política de Sinal Verde da disciplina:
 
@@ -261,10 +349,13 @@ Conforme a política de Sinal Verde da disciplina:
 - Na frente de Infra/Sec, o Claude foi usado como apoio na implementação e revisão da API, na auditoria de segurança e na revisão da documentação. As decisões de implementação, a revisão do código e a validação das soluções foram feitas pela aluna responsável.
 - Os números, testes e relatórios citados vêm da execução das ferramentas indicadas e podem ser reproduzidos a partir do repositório.
 
-# 10. Índice de evidências
+# 11. Índice de evidências
 
 | Evidência | Local |
 | --- | --- |
+| Notebook de regressão e figuras | `eda/eda_edubot_tp3.ipynb`, `eda/figures/fig10` a `fig12` |
+| Pergunta de classificação | `eda/pergunta_classificacao_tp3.md` |
+| Planejamento técnico do T2 | `eda/planejamento_t2.md` |
 | Código da API | `api/app/` |
 | Testes de segurança e saída do pytest | `api/tests/`, `security/evidencias/pytest-tp3.txt` |
 | Auditoria de dependências (antes e depois) | `security/evidencias/pip-audit-antes-tp2.txt`, `pip-audit-depois-tp3.txt` |

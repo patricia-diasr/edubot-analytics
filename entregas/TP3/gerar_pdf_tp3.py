@@ -3,6 +3,7 @@ Gera o PDF do relatório do TP3 a partir de relatorio_tp3.md.
 
 Uso (a partir de qualquer pasta):
     python entregas/TP3/gerar_pdf_tp3.py
+    python entregas/TP3/gerar_pdf_tp3.py --output maite_silva_PB_TP3.pdf
 
 Requer: reportlab (já listado em eda/requirements.txt).
 
@@ -14,6 +15,7 @@ código, citações "> " (caixa destacada, usada nas seções a preencher), e os
 O marcador {{data}} é substituído pela data do dia em que o script é executado.
 """
 
+import argparse
 import html
 import re
 from datetime import date
@@ -43,7 +45,6 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "relatorio_tp3.md"
-OUTPUT = ROOT / "patricia_rodrigues_PB_TP3.pdf"
 
 LARGURA_UTIL = A4[0] - 4 * cm
 AZUL = colors.HexColor("#1F3A5F")
@@ -407,8 +408,17 @@ def montar_story() -> list:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--output",
+        default="patricia_rodrigues_PB_TP3.pdf",
+        help="nome do PDF gerado dentro da pasta entregas/TP3",
+    )
+    args = parser.parse_args()
+    output = ROOT / args.output
+
     documento = Documento(
-        str(OUTPUT),
+        str(output),
         pagesize=A4,
         rightMargin=2 * cm,
         leftMargin=2 * cm,
@@ -418,7 +428,7 @@ def main() -> None:
         author="Maitê Mota Belo de Souza Silva e Patricia Dias Rodrigues",
     )
     documento.multiBuild(montar_story(), onFirstPage=rodape, onLaterPages=rodape)
-    print(f"PDF gerado em {OUTPUT}")
+    print(f"PDF gerado em {output}")
 
 
 if __name__ == "__main__":
