@@ -26,6 +26,16 @@ A amostra acadêmica vem de `liteofspace/unb-chatbot-dpo`. Como a fonte não dec
 licença, os textos são baixados pelo script `preparar_amostra_academica.py` e ficam
 somente no cache local. Os rótulos atuais são uma triagem para revisão humana e
 não são usados como verdade de campo.
+
+## Como reproduzir
+
+1. Instale as dependências com `pip install -r requirements.txt`.
+2. Execute `python preparar_amostra_academica.py` para criar o cache local.
+3. Execute este notebook por completo.
+
+O dataset Bitext tratado e o manifesto da amostra acadêmica estão versionados.
+O texto da amostra acadêmica não é redistribuído porque a fonte não informa uma
+licença.
 """),
     code("""
 from pathlib import Path
@@ -43,8 +53,17 @@ if BASE_DIR.name != "eda":
 FIGURES_DIR = BASE_DIR / "figures"
 FIGURES_DIR.mkdir(exist_ok=True)
 
-bitext = pd.read_csv(BASE_DIR / "data" / "edubot_dataset_tratado.csv")
-academic = pd.read_csv(BASE_DIR / "data" / "cache" / "amostra_academica_com_texto.csv")
+BITEXT_PATH = BASE_DIR / "data" / "edubot_dataset_tratado.csv"
+ACADEMIC_PATH = BASE_DIR / "data" / "cache" / "amostra_academica_com_texto.csv"
+
+if not ACADEMIC_PATH.exists():
+    raise FileNotFoundError(
+        "Cache da amostra acadêmica não encontrado. Execute "
+        "'python preparar_amostra_academica.py' na pasta eda antes do notebook."
+    )
+
+bitext = pd.read_csv(BITEXT_PATH)
+academic = pd.read_csv(ACADEMIC_PATH)
 
 sns.set_theme(style="whitegrid")
 print(f"Bitext tratado: {bitext.shape[0]:,} linhas")
@@ -207,6 +226,17 @@ def cliffs_delta(first, second):
     return (greater - smaller) / (len(first) * len(second))
 
 delta = cliffs_delta(process, direct)
+
+def delta_magnitude(value):
+    absolute = abs(value)
+    if absolute < 0.147:
+        return "desprezível"
+    if absolute < 0.330:
+        return "pequeno"
+    if absolute < 0.474:
+        return "médio"
+    return "grande"
+
 test_result = pd.DataFrame(
     {
         "grupo": ["Processo/justificativa", "Pedido direto"],
@@ -220,18 +250,24 @@ display(test_result)
 print(f"U = {statistic:,.0f}")
 print(f"p-valor = {p_value:.3e}")
 print(f"Cliff's delta = {delta:.3f}")
+print(f"Magnitude do efeito = {delta_magnitude(delta)}")
 """),
     markdown("""
 ### Interpretação
 
 Um p-valor abaixo de 0,05 rejeita H0 para esta amostra. O tamanho de efeito de
-Cliff deve ser lido junto com a diferença de medianas: uma diferença
+Cliff é interpretado pelos limiares de Romano et al. (2006): desprezível
+(|δ| < 0,147), pequeno (< 0,330), médio (< 0,474) e grande (≥ 0,474). Ele deve
+ser lido junto com a diferença de medianas: uma diferença
 estatisticamente detectável em mais de 20 mil registros pode continuar pequena
 na prática.
 
 O resultado vale para o Bitext e para os grupos definidos acima. Ele não prova
 que mensagens reais de estudantes seguem o mesmo padrão. A amostra acadêmica
 será usada para testar essa generalização depois da revisão dos rótulos.
+
+*Referência dos limiares: Romano, Kromrey, Coraggio e Skowronek (2006),
+"Appropriate statistics for ordinal level data".*
 """),
     markdown("""
 ## 5. Urgência
