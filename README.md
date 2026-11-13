@@ -17,6 +17,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | **Documentação da API (Swagger)** | https://edubot-analytics.onrender.com/docs |
 | **Auditoria final de segurança (TP3)** | [`security/auditoria-final-tp3.md`](security/auditoria-final-tp3.md) |
 | **Plano de escopo do pentest (TP4)** | [`security/plano-pentest.md`](security/plano-pentest.md) |
+| **Log do pentest (TP4)** | [`pentest/01-recon.md`](pentest/01-recon.md) · [`pentest/02-ataques.md`](pentest/02-ataques.md) · alvo: [HealthAssist API](https://health-assist-api.fly.dev) |
 | **Modelagem de ameaças** | [DFD](dfd/dfd.md) · [Análise CIA](dfd/analise-cia.md) · [STRIDE](dfd/threat-model-stride.md) |
 | **Relatórios de entrega** | [`entregas/`](entregas/) |
 
@@ -37,6 +38,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | **TP1** | Escolha do dataset, limpeza e EDA inicial | API FastAPI com JWT, DFD e análise CIA | `eda/eda_edubot_tp1.ipynb`, `eda/escolha-do-dataset.md`, `api/`, `dfd/` |
 | **TP2** | Correlações, teste de hipótese e relatório de EDA | Controles OWASP Top 10, rate limiting, testes pytest e scan OWASP ZAP | `eda/eda_edubot_tp2.ipynb`, `eda/relatorio_eda_tp2.md`, `security/`, `entregas/TP2/` |
 | **TP3** | Regressão linear múltipla, pergunta de classificação e planejamento do T2 | Auditoria final, 67 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `eda/eda_edubot_tp3.ipynb`, `eda/pergunta_classificacao_tp3.md`, `eda/planejamento_t2.md`, `security/auditoria-final-tp3.md`, `entregas/TP3/` |
+| **TP4** | Classificador de intenções, endpoint `/classify` e agente | Pentest adversarial concluído: recon, JWT, BOLA/IDOR, BFLA, fuzzing e rate limiting (sem vulnerabilidades confirmadas) | `pentest/01-recon.md`, `pentest/02-ataques.md`, `entregas/TP4/` |
 
 ## Estrutura do repositório
 
@@ -79,9 +81,13 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 │   ├── zap-findings-tp3.md       # findings do ZAP (TP3)
 │   ├── zap-report-*.html         # relatórios exportados do OWASP ZAP
 │   └── evidencias/               # saídas do pytest e do pip-audit
+├── pentest/                      # Pentest adversarial do TP4 (log + evidências)
+│   ├── 01-recon.md               # fase de reconhecimento e hipóteses de vulnerabilidade
+│   └── evidencias/               # OpenAPI do alvo, saídas de curl e revalidação da API
 ├── entregas/                     # Relatórios de cada TP (Markdown, script e PDF)
 │   ├── TP2/
-│   └── TP3/                      # inclui prints/ com as evidências
+│   ├── TP3/                      # inclui prints/ com as evidências
+│   └── TP4/                      # relatório do TP4 e prints/
 └── README.md
 ```
 
