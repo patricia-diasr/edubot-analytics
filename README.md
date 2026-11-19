@@ -18,6 +18,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | **Auditoria final de segurança (TP3)** | [`security/auditoria-final-tp3.md`](security/auditoria-final-tp3.md) |
 | **Plano de escopo do pentest (TP4)** | [`security/plano-pentest.md`](security/plano-pentest.md) |
 | **Log do pentest (TP4)** | [`pentest/01-recon.md`](pentest/01-recon.md) · [`pentest/02-ataques.md`](pentest/02-ataques.md) · alvo: [HealthAssist API](https://health-assist-api.fly.dev) |
+| **Relatório final do pentest (TP5)** | [`pentest/relatorio-final.md`](pentest/relatorio-final.md) · log: [`pentest/03-sqli-ataques-avancados.md`](pentest/03-sqli-ataques-avancados.md) · resposta recebida: [`pentest/resposta-colega.md`](pentest/resposta-colega.md) |
 | **Modelagem de ameaças** | [DFD](dfd/dfd.md) · [Análise CIA](dfd/analise-cia.md) · [STRIDE](dfd/threat-model-stride.md) |
 | **Relatórios de entrega** | [`entregas/`](entregas/) |
 
@@ -39,6 +40,7 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 | **TP2** | Correlações, teste de hipótese e relatório de EDA | Controles OWASP Top 10, rate limiting, testes pytest e scan OWASP ZAP | `eda/eda_edubot_tp2.ipynb`, `eda/relatorio_eda_tp2.md`, `security/`, `entregas/TP2/` |
 | **TP3** | Regressão linear múltipla, pergunta de classificação e planejamento do T2 | Auditoria final, 67 testes de segurança, GitHub Actions, OpenAPI documentado, deploy no Render, STRIDE e plano de pentest | `eda/eda_edubot_tp3.ipynb`, `eda/pergunta_classificacao_tp3.md`, `eda/planejamento_t2.md`, `security/auditoria-final-tp3.md`, `entregas/TP3/` |
 | **TP4** | Classificador de intenções, endpoint `/classify` e agente | Pentest adversarial concluído: recon, JWT, BOLA/IDOR, BFLA, fuzzing e rate limiting (sem vulnerabilidades confirmadas) | `pentest/01-recon.md`, `pentest/02-ataques.md`, `entregas/TP4/` |
+| **TP5** | Finalização do agente (sessão, tools e guardrails) | Pentest final: SQLi (SQLmap `--dbs --level=2 --risk=2`), NoSQL, XSS/SSTI, mass assignment, race condition e evasão de rate limit; relatório final com CVSS e cobertura OWASP API (sem vulnerabilidades exploráveis) | `pentest/03-sqli-ataques-avancados.md`, `pentest/relatorio-final.md`, `entregas/TP5/` |
 
 ## Estrutura do repositório
 
@@ -81,13 +83,18 @@ O projeto é construído ao longo do bloco em cinco entregas parciais, evoluindo
 │   ├── zap-findings-tp3.md       # findings do ZAP (TP3)
 │   ├── zap-report-*.html         # relatórios exportados do OWASP ZAP
 │   └── evidencias/               # saídas do pytest e do pip-audit
-├── pentest/                      # Pentest adversarial do TP4 (log + evidências)
-│   ├── 01-recon.md               # fase de reconhecimento e hipóteses de vulnerabilidade
-│   └── evidencias/               # OpenAPI do alvo, saídas de curl e revalidação da API
+├── pentest/                      # Pentest adversarial (TP4 + TP5): logs + evidências
+│   ├── 01-recon.md               # TP4: reconhecimento e hipóteses de vulnerabilidade
+│   ├── 02-ataques.md             # TP4: JWT, BOLA/BFLA, fuzzing e rate limiting
+│   ├── 03-sqli-ataques-avancados.md  # TP5: SQLi, NoSQL, XSS/SSTI, mass assignment, race, WAF
+│   ├── relatorio-final.md        # TP5: relatório final do pentest (CVSS, PoC, OWASP API)
+│   ├── resposta-colega.md        # TP5: resposta ao pentest recebido (aguarda relatório da dupla)
+│   └── evidencias/               # OpenAPI do alvo, SQLmap, curl e demais saídas (TP4 e TP5)
 ├── entregas/                     # Relatórios de cada TP (Markdown, script e PDF)
 │   ├── TP2/
 │   ├── TP3/                      # inclui prints/ com as evidências
-│   └── TP4/                      # relatório do TP4 e prints/
+│   ├── TP4/                      # relatório do TP4 e prints/
+│   └── TP5/                      # gerador do PDF do relatório final e prints/ (01–11)
 └── README.md
 ```
 
